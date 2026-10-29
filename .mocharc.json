@@ -1,0 +1,6 @@
+{
+  "spec": "tests/unit/**/*.test.ts",
+  "require": ["ts-node/register/transpile-only", "tests/unit/vscode-mock.ts"],
+  "extension": ["ts"],
+  "timeout": 10000
+}

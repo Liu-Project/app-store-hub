@@ -1,0 +1,214 @@
+{
+  "name": "appstore-hub",
+  "displayName": "插件中心",
+  "description": "插件中心（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面插件中心。",
+  "version": "0.1.22",
+  "publisher": "Liu-Hongcun",
+  "author": {
+    "name": "Liu-Hongcun"
+  },
+  "license": "MIT",
+  "icon": "media/store.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Liu-Project/app-store-hub"
+  },
+  "bugs": {
+    "url": "https://github.com/Liu-Project/app-store-hub/issues"
+  },
+  "homepage": "https://github.com/Liu-Project/app-store-hub#readme",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "appStoreHub",
+    "plugin-center",
+    "marketplace",
+    "extensions",
+    "webview"
+  ],
+  "badges": [
+    {
+      "url": "https://img.shields.io/open-vsx/v/Liu-Hongcun/appstore-hub.svg?label=Open%20VSX",
+      "href": "https://open-vsx.org/extension/Liu-Hongcun/appstore-hub",
+      "description": "Open VSX version"
+    },
+    {
+      "url": "https://img.shields.io/badge/License-MIT-blue.svg",
+      "href": "https://github.com/Liu-Project/app-store-hub/blob/master/LICENSE",
+      "description": "License"
+    }
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "appStoreHub.open",
+        "title": "打开插件中心",
+        "category": "插件中心",
+        "icon": "$(store)"
+      },
+      {
+        "command": "appStoreHub.toggleDebug",
+        "title": "切换插件中心调试日志",
+        "category": "插件中心",
+        "icon": "$(debug)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "appStoreHub",
+          "title": "插件中心",
+          "icon": "media/store.png"
+        }
+      ]
+    },
+    "views": {
+      "appStoreHub": [
+        {
+          "type": "webview",
+          "id": "appStoreHub.main",
+          "name": "插件中心"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "appStoreHub.open",
+          "when": "view == appStoreHub.main",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "插件中心",
+      "properties": {
+        "appStoreHub.sources": {
+          "type": "array",
+          "default": [
+            {
+              "label": "VS Code Marketplace",
+              "url": "https://marketplace.visualstudio.com/_apis/public/gallery",
+              "concurrent": false
+            },
+            {
+              "label": "Open VSX",
+              "url": "https://open-vsx.org/vscode/gallery",
+              "concurrent": true
+            },
+            {
+              "label": "本地开发源",
+              "url": "http://127.0.0.1:3000",
+              "concurrent": false
+            }
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "软件源名称（界面下拉框与切换时显示的名称），例如：Open VSX、本地开发源"
+              },
+              "url": {
+                "type": "string",
+                "description": "软件源地址（后端 Gallery 服务地址），必须以 http:// 或 https:// 开头，例如：http://127.0.0.1:3000"
+              },
+              "concurrent": {
+                "type": "boolean",
+                "default": false,
+                "description": "是否启用并发连接：勾选后连接失败时并发赛跑（最多 3 个同时连接），适合不稳定源（如 open-vsx）；稳定源（如微软市场）建议不勾选，避免并发请求触发 IP 限流。"
+              }
+            },
+            "required": [
+              "label",
+              "url"
+            ]
+          },
+          "description": "软件源列表，每个软件源需配置「名称(label)」和「地址(url)」两个字段，地址必须以 http:// 或 https:// 开头，例如：{\"label\":\"本地开发源\",\"url\":\"http://127.0.0.1:3000\"}；「并发(concurrent)」可选，勾选后连接失败时并发赛跑。界面顶部下拉框可切换当前源。"
+        },
+        "appStoreHub.activeSource": {
+          "type": "string",
+          "default": "https://marketplace.visualstudio.com/_apis/public/gallery",
+          "description": "当前激活的软件源地址，需与 sources 列表中的 url 一致。"
+        },
+        "appStoreHub.installMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual"
+          ],
+          "default": "auto",
+          "description": "安装方式：auto 自动调用 VS Code 扩展安装命令（需本地安装对应 .vsix）；manual 仅通知后端记录状态。"
+        },
+        "appStoreHub.retry": {
+          "type": "number",
+          "default": 4,
+          "minimum": 0,
+          "maximum": 10,
+          "description": "连接软件源失败时的自动重试次数（应对代理/网络偶发中断，例如 open-vsx 源经代理约 60% 概率连接被中断）。默认 4，即最多尝试 5 次。"
+        },
+        "appStoreHub.connTimeout": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 1000,
+          "maximum": 60000,
+          "description": "单次请求的连接超时（毫秒）。open-vsx 等慢源经代理响应可达 10~15s，默认 20000。"
+        },
+        "appStoreHub.proxy": {
+          "type": "string",
+          "default": "",
+          "description": "访问软件源使用的 HTTP/HTTPS 代理地址（如 http://proxy.example.com:8080）。留空时依次回退 VS Code 的 http.proxy 设置与系统环境变量 https_proxy/http_proxy。注意：VS Code 从桌面图标启动时扩展进程不继承终端导出的代理变量，必须在此或 http.proxy 显式配置代理才能正常访问软件源。"
+        },
+        "appStoreHub.debug": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否输出调试日志到「插件中心」输出面板（含请求 URL、代理、耗时、重试与错误详情）。可用命令面板「切换插件中心调试日志」快速开关。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "check-format": "prettier --check \"src/**/*.ts\"",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node scripts/test.cjs",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.77.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
+    "@vscode/vsce": "^2.27.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.4.0",
+    "mock-require": "^3.0.3",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.17",
+    "marked": "^12.0.2"
+  }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>插件中心 Webview 模拟测试</title>
+<style>
+body { font-family: sans-serif; margin: 0; background: #1e1e1e; color: #ccc; }
+#harness { padding: 8px; border-bottom: 1px solid #444; font-size: 12px; display: flex; gap: 8px; align-items: center; }
+#harness b { color: #4fc1ff; }
+#sentLog { white-space: pre-wrap; font-family: monospace; font-size: 11px; max-height: 200px; overflow: auto; border-top: 1px solid #444; padding: 6px; }
+iframe { width: 100%; height: 600px; border: 0; }
+</style>
+</head>
+<body>
+<div id="harness">
+  <b>模拟插件端</b>
+  <button id="btnState">打印 sent 列表</button>
+  <span id="status"></span>
+</div>
+<div id="sentLog">(尚未发送消息)</div>
+<iframe id="frame" src="webview-sim-frame.html"></iframe>
+
+<script>
+  var frame = document.getElementById('frame');
+  var log = document.getElementById('sentLog');
+  var status = document.getElementById('status');
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.__type === 'sent') {
+      log.textContent = 'sent[' + d.list.length + '] ' + JSON.stringify(d.list[d.list.length - 1]) + '\n' + log.textContent;
+    } else if (d.__type === 'status') {
+      status.textContent = d.text;
+    }
+  });
+  document.getElementById('btnState').addEventListener('click', function () {
+    frame.contentWindow.postMessage({ __type: 'dump' }, '*');
+  });
+</script>
+</body>
+</html>

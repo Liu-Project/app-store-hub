@@ -1,0 +1,881 @@
+/* ============================================================================
+ * 详情页样式：照抄 VS Code 1.138.0 源码
+ * 来源：vscode-1.138.0/src/vs/workbench/contrib/extensions/browser/media/
+ *       extensionEditor.css / extensionActions.css / extensionsWidgets.css
+ * 说明：webview 无 monaco 框架，去除 .monaco-workbench / .monaco-action-bar
+ *       前缀，结构类名与源码保持一致。
+ * ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ============================= .extension-editor ============================= */
+
+.extension-editor {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: 0px auto;
+  max-width: 95%;
+}
+
+.extension-editor .clickable {
+  cursor: pointer;
+}
+
+.extension-editor > .header {
+  display: flex;
+  padding-top: 20px;
+  padding-bottom: 12px;
+  padding-left: 20px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.extension-editor > .header > .icon-container {
+  position: relative;
+}
+
+.extension-editor > .header > .icon-container .extension-icon .icon {
+  height: 128px;
+  width: 128px;
+}
+
+.extension-editor > .header > .icon-container .extension-icon .codicon {
+  font-size: 128px !important;
+}
+
+.extension-editor > .header > .icon-container .extension-icon-badge {
+  position: absolute;
+  right: 0px;
+  top: 88px;
+  width: 38px;
+  height: 38px;
+  line-height: 38px;
+  border-radius: 20px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.extension-editor > .header > .icon-container .extension-icon-badge .codicon {
+  color: currentColor;
+  font-size: 28px;
+}
+
+.extension-editor > .header > .details {
+  padding-left: 12px;
+  overflow: hidden;
+  user-select: text;
+  -webkit-user-select: text;
+  flex: 1;
+  min-width: 0;
+}
+
+.extension-editor > .header > .details > .title {
+  display: flex;
+  align-items: center;
+}
+
+.extension-editor > .header > .details > .title > .name {
+  flex: 0;
+  font-size: 26px;
+  line-height: 30px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extension-editor > .header > .details > .title > .name.deprecated {
+  text-decoration: line-through;
+}
+
+.extension-editor > .header > .details > .title > .version {
+  margin-left: 10px;
+  user-select: text;
+  -webkit-user-select: text;
+  white-space: nowrap;
+}
+
+.extension-editor > .header > .details > .title > .builtin {
+  font-size: 10px;
+  font-style: italic;
+  margin-left: 10px;
+}
+
+.extension-editor > .header > .details > .title > .pre-release {
+  margin-left: 10px;
+  padding: 0px 4px;
+  border-radius: 4px;
+  background-color: var(--vscode-extensionIcon-preReleaseForeground);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+.extension-editor > .header > .details > .title > .pre-release > .codicon.codicon-extensions-pre-release {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.extension-editor > .header > .details > .title > .pre-release > .pre-release-text {
+  font-size: 10px;
+  padding-left: 3px;
+}
+
+.extension-editor > .header > .details > .title > .preview {
+  background: rgb(214, 63, 38);
+  font-size: 10px;
+  font-style: italic;
+  margin-left: 10px;
+  padding: 0px 4px;
+  border-radius: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  color: white;
+  display: none;
+}
+
+.extension-editor > .header > .details > .subtitle {
+  padding-top: 6px;
+  line-height: 20px;
+  flex-wrap: wrap;
+}
+
+.extension-editor > .header > .details > .subtitle .hide {
+  display: none;
+}
+
+.extension-editor > .header > .details > .subtitle .publisher {
+  display: flex;
+  align-items: center;
+}
+
+.extension-editor > .header > .details > .subtitle .publisher .verified-publisher:not(:empty) {
+  margin-left: 4px;
+}
+
+.extension-editor > .header > .details > .subtitle,
+.extension-editor > .header > .details > .subtitle .extension-kind-indicator,
+.extension-editor > .header > .details > .subtitle .install,
+.extension-editor > .header > .details > .subtitle .rating,
+.extension-editor > .header > .details > .subtitle .license,
+.extension-editor > .header > .details > .subtitle .sponsor {
+  display: flex;
+  align-items: center;
+}
+
+.extension-editor > .header > .details > .subtitle .sponsor .codicon {
+  padding-right: 3px;
+}
+
+.extension-editor > .header > .details > .subtitle .install > .count {
+  margin-left: 6px;
+}
+
+.extension-editor > .header > .details > .subtitle .extension-kind-indicator > .codicon {
+  margin-right: 6px;
+}
+
+.extension-editor > .header > .details > .subtitle > .subtitle-entry:not(:empty):not(.last-non-empty) {
+  border-right: 1px solid rgba(128, 128, 128, 0.7);
+  margin-right: 14px;
+  padding-right: 14px;
+}
+
+.extension-editor > .header > .details > .description {
+  margin-top: 10px;
+}
+
+.extension-editor > .header > .details > .actions-status-container {
+  margin-top: 10px;
+  display: flex;
+}
+
+.extension-editor > .header > .details > .actions-status-container.list-layout {
+  display: inherit;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container {
+  text-align: initial;
+  flex-wrap: wrap;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container > .action-item {
+  margin-right: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container > .action-item.disabled {
+  min-width: 0;
+}
+
+/* 安装/卸载等主要按钮（照抄 extensionActions.css .extension-action.label） */
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action {
+  line-height: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  outline-offset: 1px;
+  width: auto;
+  height: auto;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label {
+  padding: 0 5px;
+  background-color: var(--vscode-extensionButton-background);
+  border: 1px solid var(--vscode-extensionButton-border, transparent);
+  color: var(--vscode-extensionButton-foreground);
+  line-height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 6px;
+  font-size: 13px;
+  user-select: none;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label:hover {
+  background-color: var(--vscode-extensionButton-hoverBackground);
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.prominent {
+  background-color: var(--vscode-extensionButton-prominentBackground);
+  color: var(--vscode-extensionButton-prominentForeground) !important;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.prominent:hover {
+  background-color: var(--vscode-extensionButton-prominentHoverBackground);
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.install.hide,
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.uninstall.hide,
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.update.hide,
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.hide {
+  display: none;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .extension-action.label.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Auto Update checkbox（照抄 ToggleAutoUpdateForExtensionAction checkbox） */
+.extension-editor > .header > .details > .actions-status-container > .actions-container .checkbox-action-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  margin-top: 2px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .checkbox-action-item input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--vscode-checkbox-background);
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .checkbox-action-item .auto-update-label {
+  padding-left: 4px;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .actions-container .checkbox-action-item.disabled {
+  display: none;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .status {
+  line-height: 22px;
+  font-size: 90%;
+  margin-top: 3px;
+}
+
+.extension-editor > .header > .details > .actions-status-container.list-layout > .status {
+  margin-top: 5px;
+}
+
+.extension-editor > .header > .details > .actions-status-container > .status .codicon {
+  vertical-align: text-bottom;
+}
+
+.extension-editor > .header > .details > .pre-release-text p,
+.extension-editor > .header > .details > .actions-status-container > .status p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+/* ============================= .body / .navbar ============================= */
+
+.extension-editor > .body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.extension-editor > .body > .navbar {
+  height: 36px;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 36px;
+  padding-left: 20px;
+  border-bottom: 1px solid var(--vscode-panelSection-border);
+  flex-shrink: 0;
+}
+
+.extension-editor > .body > .navbar > .actions-container {
+  display: flex;
+  justify-content: initial;
+  height: 100%;
+}
+
+.extension-editor > .body > .navbar > .actions-container > .action-item {
+  height: 100%;
+  cursor: pointer;
+}
+
+.extension-editor > .body > .navbar > .actions-container > .action-item > .action-label {
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--vscode-panelTitle-inactiveForeground);
+  text-transform: uppercase;
+  background: none !important;
+  border-radius: 0px !important;
+  display: inline-block;
+  height: 100%;
+  line-height: 36px;
+  border-bottom: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.extension-editor > .body > .navbar > .actions-container > .action-item > .action-label.checked {
+  border-bottom: 1px solid var(--vscode-panelTitle-activeBorder);
+  color: var(--vscode-panelTitle-activeForeground);
+}
+
+.extension-editor > .body > .navbar > .actions-container > .action-item > .action-label:hover {
+  color: var(--vscode-panelTitle-activeForeground);
+}
+
+.extension-editor > .body > .content {
+  position: relative;
+  overflow: hidden;
+  user-select: text;
+  -webkit-user-select: text;
+  flex: 1;
+}
+
+.extension-editor > .body > .content.loading {
+  background: url('loading.svg') center center no-repeat;
+}
+
+.extension-editor > .body > .content > .nocontent {
+  margin-left: 20px;
+}
+
+/* ============================= .content > .details ============================= */
+
+.extension-editor > .body > .content > .details {
+  height: 100%;
+  display: flex;
+}
+
+.extension-editor > .body > .content > .details > .content-container {
+  margin: 0px auto;
+  max-width: 75%;
+  height: 100%;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.extension-editor > .body > .content > .details.narrow > .content-container {
+  margin: inherit;
+  max-width: inherit;
+  min-width: 0;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container {
+  width: 25%;
+  min-width: 175px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.extension-editor > .body > .content > .details.narrow > .additional-details-container {
+  display: none;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container > .additional-details-content {
+  height: 100%;
+  overflow-y: scroll;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .additional-details-element:not(:first-child) {
+  padding-top: 16px;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .additional-details-element {
+  padding-bottom: 16px;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .additional-details-element:not(:last-child) {
+  border-bottom: 1px solid rgba(128, 128, 128, 0.22);
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .additional-details-element > .additional-details-title {
+  font-size: 120%;
+  padding-bottom: 12px;
+}
+
+/* Categories */
+.extension-editor > .body > .content > .details > .additional-details-container .categories-container > .categories > .category {
+  display: inline-block;
+  border: 1px solid rgba(136, 136, 136, 0.45);
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 90%;
+  margin: 0px 6px 3px 0px;
+  cursor: pointer;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .categories-container > .categories > .category.clickable:hover {
+  background-color: var(--vscode-extensionButton-hoverBackground);
+  border-color: var(--vscode-extensionButton-hoverBackground);
+  color: var(--vscode-extensionButton-foreground);
+}
+
+/* Resources */
+.extension-editor > .body > .content > .details > .additional-details-container .resources-container > .resources > .resource {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .resources-container > .resources > .resource a {
+  padding-left: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: var(--text-link-decoration);
+  color: var(--vscode-textLink-foreground);
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .resources-container > .resources > .resource:hover a {
+  text-decoration: underline;
+  color: var(--vscode-textLink-activeForeground);
+}
+
+/* More info（Marketplace / Installation） */
+.extension-editor > .body > .content > .details > .additional-details-container .more-info-container > .more-info > .more-info-entry {
+  font-size: 90%;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .more-info-container > .more-info > .more-info-entry:nth-child(odd) {
+  background-color: rgba(130, 130, 130, 0.04);
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .more-info-container > .more-info > .more-info-entry code {
+  background-color: transparent;
+  padding: 0px;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .more-info-container > .more-info > .more-info-entry > .more-info-entry-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extension-editor > .body > .content > .details > .additional-details-container .more-info-container > .more-info > .more-info-entry > .link {
+  cursor: pointer;
+}
+
+/* ============================= Features tab ============================= */
+
+.extension-editor .subcontent.feature-contributions {
+  margin-top: 14px;
+}
+
+/* 可折叠分组（details/summary）内容区 */
+.extension-editor .subcontent.feature-contributions details > .feature-body-content {
+  padding: 6px 6px 12px;
+  overflow-x: auto;
+}
+
+.extension-editor .subcontent.feature-contributions .feature-content.markdown-body .codicon {
+  vertical-align: sub;
+}
+
+/* Features 表格（照抄 extensionEditor.css table 样式） */
+.extension-editor > .body > .content table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+.extension-editor > .body > .content details:not(:first-child) {
+  margin-top: 20px;
+}
+
+.extension-editor > .body > .content details > summary {
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 120%;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.22);
+  padding: 3px 6px;
+  line-height: 22px;
+}
+
+.extension-editor > .body > .content table tr:nth-child(odd) {
+  background-color: rgba(130, 130, 130, 0.04);
+}
+
+.extension-editor > .body > .content table tr:not(:first-child):hover {
+  background-color: rgba(128, 128, 128, 0.15);
+}
+
+.extension-editor > .body > .content table th,
+.extension-editor > .body > .content table td {
+  padding: 2px 16px 2px 4px;
+}
+
+.extension-editor > .body > .content table td {
+  vertical-align: top;
+}
+
+.extension-editor > .body > .content table th:last-child,
+.extension-editor > .body > .content table td:last-child {
+  padding: 2px 4px;
+}
+
+.extension-editor > .body > .content table th {
+  text-align: left;
+  word-break: keep-all;
+}
+
+.extension-editor > .body > .content table td > div,
+.extension-editor > .body > .content table td > div > p {
+  padding: 0px;
+  margin: 0px;
+}
+
+.extension-editor code:not(:empty) {
+  font-family: var(--monaco-monospace-font);
+  font-size: 90%;
+  background-color: rgba(128, 128, 128, 0.17);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.extension-editor > .body > .content table .colorBox {
+  box-sizing: border-box;
+  width: 0.8em;
+  height: 0.8em;
+  display: inline-block;
+  border-width: 0.1em;
+  border-style: solid;
+  border-color: rgb(0, 0, 0);
+  margin: 0em 0.2em;
+  vertical-align: middle;
+}
+
+/* Dependencies / ExtensionPack 列表 */
+.extension-editor .subcontent .extension {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.extension-editor .subcontent .extension:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.extension-editor .subcontent .extension > .icon {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+.extension-editor .subcontent .extension > .details {
+  flex: 1;
+  overflow: hidden;
+  padding-left: 10px;
+}
+
+.extension-editor .subcontent .extension > .details > .header {
+  display: flex;
+  align-items: center;
+  line-height: 19px;
+  overflow: hidden;
+}
+
+.extension-editor .subcontent .extension > .details > .header > .name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.extension-editor .subcontent .extension > .details > .header > .name:hover {
+  text-decoration: underline;
+}
+
+.extension-editor .subcontent .extension > .details > .header > .identifier {
+  font-size: 90%;
+  opacity: 0.6;
+  margin-left: 10px;
+  background: rgba(173, 173, 173, 0.31);
+  padding: 0px 4px;
+  border-radius: 4px;
+}
+
+.extension-editor .subcontent .extension > .details > .footer {
+  display: flex;
+  line-height: 19px;
+  overflow: hidden;
+  padding-top: 5px;
+}
+
+.extension-editor .subcontent .extension > .details > .footer .publisher {
+  font-size: 90%;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+/* ============ Markdown（Details/Changelog）直接复制 VS Code DEFAULT_MARKDOWN_STYLES ============
+   markdownDocumentRenderer.ts：body 选择器适配为 .markdown-body 容器（webview 内嵌渲染） */
+
+.markdown-body {
+  padding: 10px 20px;
+  line-height: 22px;
+  max-width: 882px;
+  margin: 0 auto;
+}
+
+.markdown-body *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.markdown-body a {
+  text-decoration: var(--text-link-decoration);
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body a:focus,
+.markdown-body input:focus,
+.markdown-body select:focus,
+.markdown-body textarea:focus {
+  outline: 1px solid -webkit-focus-ring-color;
+  outline-offset: -1px;
+}
+
+.markdown-body hr {
+  border: 0;
+  height: 2px;
+  border-bottom: 2px solid;
+}
+
+.markdown-body h1 {
+  padding-bottom: 0.3em;
+  line-height: 1.2;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  font-weight: normal;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+}
+
+.markdown-body th {
+  text-align: left;
+  border-bottom: 1px solid;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 5px 10px;
+}
+
+.markdown-body table > tbody > tr + tr > td {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.markdown-body blockquote {
+  margin: 0 7px 0 5px;
+  padding: 0 16px 0 10px;
+  border-left-width: 5px;
+  border-left-style: solid;
+}
+
+.markdown-body code {
+  font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+}
+
+.markdown-body pre {
+  padding: 16px;
+  border-radius: 3px;
+  overflow: auto;
+  background-color: var(--vscode-textCodeBlock-background);
+}
+
+.markdown-body pre code {
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  font-size: var(--vscode-editor-font-size);
+  line-height: 1.5;
+  color: var(--vscode-editor-foreground);
+  tab-size: 4;
+}
+
+.markdown-body .monaco-tokenized-source {
+  white-space: pre;
+}
+
+/* Theming */
+.markdown-body .pre {
+  background-color: var(--vscode-textCodeBlock-background);
+}
+
+.vscode-high-contrast .markdown-body h1 {
+  border-color: rgb(0, 0, 0);
+}
+
+.vscode-light .markdown-body th {
+  border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark .markdown-body th {
+  border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light .markdown-body h1,
+.vscode-light .markdown-body hr,
+.vscode-light .markdown-body td {
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark .markdown-body h1,
+.vscode-dark .markdown-body hr,
+.vscode-dark .markdown-body td {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (forced-colors: active) and (prefers-color-scheme: light) {
+  .markdown-body {
+    forced-color-adjust: none;
+  }
+}
+
+@media (forced-colors: active) and (prefers-color-scheme: dark) {
+  .markdown-body {
+    forced-color-adjust: none;
+  }
+}
+
+/* ============================= 通用 ============================= */
+
+.extension-editor .empty,
+.empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--vscode-panel-border);
+  border-top-color: var(--vscode-textLink-foreground);
+  border-radius: 50%;
+  margin: 20px auto;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--vscode-notifications-background);
+  color: var(--vscode-notifications-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.toast.error {
+  color: var(--vscode-errorForeground, #f14c4c);
+}
+
+/* 已验证发布者（照抄 extensionsWidgets.css） */
+.verified-publisher {
+  display: flex;
+  align-items: center;
+}
+
+.verified-publisher > .extension-verified-publisher-domain {
+  padding-left: 2px;
+  color: var(--vscode-extensionIcon-verifiedForeground);
+  text-decoration: var(--text-link-decoration);
+}
+
+.publisher-name.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

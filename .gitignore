@@ -1,0 +1,22 @@
+node_modules/
+out/
+*.vsix
+.DS_Store
+
+# TypeScript 增量编译缓存
+tsconfig.tsbuildinfo
+
+# 测试临时产物
+.playwright-mcp/
+
+# 本地软件源后端（含打包的 vsix 与生成数据），不纳入版本库
+repo/
+
+# 发布打包脚本与发布产物
+scripts/release.cjs
+releases/
+
+.zero/
+
+# 本地 VS Code 工作区配置
+.vscode/

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 使用 Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 代码检查 (ESLint)
+        run: npm run lint
+
+      - name: 格式检查 (Prettier)
+        run: npm run check-format
+
+      - name: 类型检查与编译
+        run: npm run compile
+
+      - name: 单元测试
+        run: npm test
+
+      - name: 打包 .vsix
+        run: npm run package
+
+      - name: 上传打包产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: appstore-hub-${{ matrix.node-version }}-vsix
+          path: '*.vsix'
+          if-no-files-found: error

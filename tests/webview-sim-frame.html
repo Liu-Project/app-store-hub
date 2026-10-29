@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>模拟 webview 环境</title>
+</head>
+<body>
+<script>
+(function () {
+  'use strict';
+  var sent = [];
+
+  function postToHarness(type, payload) {
+    try {
+      parent.postMessage(Object.assign({ __type: type }, payload), '*');
+    } catch (e) { /* ignore */ }
+  }
+
+  window.acquireVsCodeApi = function () {
+    return {
+      postMessage: function (msg) {
+        sent.push(msg);
+        postToHarness('sent', { list: sent });
+      },
+      getState: function () { return {}; },
+      setState: function () {}
+    };
+  };
+
+  // 模拟插件端响应
+  window.__pluginReply = function (msg) {
+    if (msg.type === 'getSources') {
+      window.postMessage({
+        id: msg.id,
+        ok: true,
+        data: {
+          sources: [{ label: '本地开发源', url: 'http://127.0.0.1:3000' }],
+          activeUrl: 'http://127.0.0.1:3000'
+        }
+      }, '*');
+    } else if (msg.type === 'getLocalExtensions') {
+      window.postMessage({
+        id: msg.id,
+        ok: true,
+        data: [{ id: 'liu-hongcun.markdown-commonmark-preview', version: '0.2.9' }]
+      }, '*');
+    } else if (msg.type === 'openDetail') {
+      window.postMessage({ id: msg.id, ok: true, data: { opened: true } }, '*');
+    } else {
+      window.postMessage({ id: msg.id, ok: true, data: {} }, '*');
+    }
+  };
+
+  // 监听模拟插件端向 webview 发送的请求（通过 acquireVsCodeApi 的 postMessage 被捕获后转发给 __pluginReply）
+  var realPost = window.acquireVsCodeApi().postMessage;
+  var original = window.acquireVsCodeApi;
+  window.acquireVsCodeApi = function () {
+    return {
+      postMessage: function (msg) {
+        sent.push(msg);
+        postToHarness('sent', { list: sent });
+        setTimeout(function () { window.__pluginReply(msg); }, 0);
+      },
+      getState: function () { return {}; },
+      setState: function () {}
+    };
+  };
+
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.__type === 'dump') {
+      postToHarness('dump', { list: sent });
+    }
+  });
+
+  window.addEventListener('error', function (e) {
+    postToHarness('err', { text: e.message + ' @' + (e.filename || '') + ':' + e.lineno });
+  });
+})();
+</script>
+<script src="../webview/appStoreHub.js"></script>
+</body>
+</html>

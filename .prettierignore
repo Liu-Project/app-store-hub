@@ -1,0 +1,7 @@
+out/
+node_modules/
+*.vsix
+repo/
+package-lock.json
+webview/
+media/
