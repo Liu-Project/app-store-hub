@@ -18,7 +18,7 @@
 
 ## 界面预览
 
-![插件中心列表页](media/screenshot.png)
+![插件中心列表页](https://cdn.jsdelivr.net/gh/Liu-Project/app-store-hub@master/media/screenshot.png)
 
 ## 功能特性
 
