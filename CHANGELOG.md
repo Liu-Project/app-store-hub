@@ -4,6 +4,21 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.23] - 2026-10-30
+
+### 新增
+
+- **中英文界面切换**：新增配置 `appStoreHub.language`（`auto` 跟随 VS Code 界面语言 / `zh-cn` / `en`），列表、详情页与扩展端提示（QuickPick、进度、toast、错误信息）全部走语言包。
+  - 新增 `src/i18n.ts`（扩展端 zh/en 字典与 `t()`）、`webview/i18n.js`（webview 端 `window.t()` 字典），`getHtml` 注入 `__APPSTORE_LOCALE__`。
+  - 新增 `tests/unit/i18n.test.ts`（语言切换/占位符/未知 key 回退），webview 冒烟测试补充 i18n.js 初始化、英文切换与 key 完整性校验。
+- **英文版 README（README.en.md）**，中文 README 补齐 GitHub Stars / CI 徽章与语言切换入口。
+
+### 修复
+
+- **「Webview is disposed」未捕获错误刷屏**：详情面板/侧边栏视图被关闭后，异步回调仍向已销毁的 webview 发消息。
+  - 扩展端：新增 `src/safePost.ts` 统一吞掉已销毁 webview 的同步/异步发送异常，`appStoreHubPanel`/`detailPanel` 全部 `postMessage` 调用点改用 `safePost`。
+  - webview 端：`appStoreHub.js` 的 `request`/`log` 与 `detail.js` 的 `post` 统一 try/catch 包裹 `vscode.postMessage`，页面销毁后异步回调不再抛未捕获错误。
+
 ## [0.1.22] - 2026-10-27
 
 ### 修复

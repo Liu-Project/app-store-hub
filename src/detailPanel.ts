@@ -6,6 +6,8 @@ import * as crypto from 'crypto';
 import type { ApiClient, AppInfo } from './apiClient';
 import { downloadFile } from './netHttp';
 import { getInstallMode, getProxyUrl } from './config';
+import { t, uiLocale } from './i18n';
+import { safePost } from './safePost';
 
 interface DetailMessage {
   type?: string;
@@ -62,7 +64,7 @@ export class DetailPanel {
     msg: DetailMessage
   ): Promise<void> {
     const post = (text: string, isError = false) => {
-      void panel.webview.postMessage({ type: 'toast', text, isError });
+      safePost(panel.webview, { type: 'toast', text, isError });
     };
     try {
       switch (msg.type) {
@@ -73,27 +75,27 @@ export class DetailPanel {
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.Notification,
-              title: `正在安装...`,
+              title: t('installingGeneric'),
             },
             () => DetailPanel.doInstall(client, appId)
           );
-          post('安装成功，请重新加载窗口生效');
+          post(t('installSuccessGeneric'));
           await DetailPanel.pushData(panel, client, appId);
           break;
         case 'update':
           await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: '正在更新...' },
+            { location: vscode.ProgressLocation.Notification, title: t('updatingGeneric') },
             () => DetailPanel.doUpdate(client, appId)
           );
-          post('更新成功，请重新加载窗口生效');
+          post(t('updateSuccessGeneric'));
           await DetailPanel.pushData(panel, client, appId);
           break;
         case 'uninstall':
           await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: '正在卸载...' },
+            { location: vscode.ProgressLocation.Notification, title: t('uninstallingGeneric') },
             () => DetailPanel.doUninstall(client, appId)
           );
-          post('卸载成功');
+          post(t('uninstallSuccessGeneric'));
           await DetailPanel.pushData(panel, client, appId);
           break;
         case 'selectVersion':
@@ -135,7 +137,7 @@ export class DetailPanel {
           // 失败必须回空内容：否则 webview 的 pendingContent 永不 resolve，Details 页 spinner 永远转
           const url = String((msg.payload as Record<string, unknown>)?.url ?? '');
           if (!url) {
-            void panel.webview.postMessage({ type: 'content', url, text: '' });
+            safePost(panel.webview, { type: 'content', url, text: '' });
             break;
           }
           let text = '';
@@ -144,7 +146,7 @@ export class DetailPanel {
           } catch {
             text = '';
           }
-          void panel.webview.postMessage({ type: 'content', url, text });
+          safePost(panel.webview, { type: 'content', url, text });
           break;
         }
         case 'getImage': {
@@ -155,7 +157,7 @@ export class DetailPanel {
             break;
           }
           const dataUrl = await client.getImageDataUrl(url);
-          void panel.webview.postMessage({ type: 'image', url, dataUrl });
+          safePost(panel.webview, { type: 'image', url, dataUrl });
           break;
         }
         default:
@@ -227,9 +229,9 @@ export class DetailPanel {
     const app = await client.getApp(appId);
     const versions = (app.versions || []).filter((v) => v.hasPackage);
     if (!versions.length) {
-      void panel.webview.postMessage({
+      safePost(panel.webview, {
         type: 'toast',
-        text: `[${app.displayName}] 暂无可安装的版本包`,
+        text: t('noInstallableVersion', app.displayName),
         isError: true,
       });
       return;
@@ -237,26 +239,27 @@ export class DetailPanel {
     if (!mode) {
       const op = await vscode.window.showQuickPick(
         [
-          { label: '安装其他版本', description: `安装 ${app.displayName} 的历史版本` },
-          { label: '下载其他版本', description: `下载 ${app.displayName} 的历史版本 .vsix` },
+          { label: t('installOtherVersion'), description: t('installHistory', app.displayName) },
+          { label: t('downloadOtherVersion'), description: t('downloadHistory', app.displayName) },
         ],
-        { placeHolder: `选择操作：${app.displayName}` }
+        { placeHolder: t('selectOperation', app.displayName) }
       );
       if (!op) return;
-      mode = op.label === '下载其他版本' ? 'download' : 'install';
+      mode = op.label === t('downloadOtherVersion') ? 'download' : 'install';
     }
     const local = vscode.extensions.all.find((ext) => ext.id === `${app.publisher}.${app.name}`);
     const current = local ? String(local.packageJSON?.version ?? '') : app.version;
     const pick = vscode.window.createQuickPick();
     pick.title =
       mode === 'download'
-        ? `选择要下载的版本：${app.displayName}`
-        : `选择要安装的版本：${app.displayName}`;
-    pick.placeholder = mode === 'download' ? '选择一个版本下载 .vsix' : '选择一个版本安装';
+        ? t('titleDownloadVersion', app.displayName)
+        : t('titleInstallVersion', app.displayName);
+    pick.placeholder =
+      mode === 'download' ? t('placeholderDownloadVersion') : t('placeholderInstallVersion');
     pick.items = versions.map((v) => ({
       label: v.version,
-      description: v.version === current ? '当前版本' : '',
-      detail: v.date ? `发布于 ${v.date}` : '',
+      description: v.version === current ? t('currentVersion') : '',
+      detail: v.date ? t('releasedOn', v.date) : '',
     }));
     pick.onDidChangeSelection((items) => {
       const sel = items[0];
@@ -270,32 +273,36 @@ export class DetailPanel {
           }
           if (sel.label === current) {
             vscode.window.showInformationMessage(
-              `[${app.displayName}] 版本 ${sel.label} 已安装，无需重复安装`
+              t('versionAlreadyInstalled', app.displayName, sel.label)
             );
             return;
           }
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.Notification,
-              title: `正在安装 ${app.displayName} ${sel.label}...`,
+              title: t('installingVersion', app.displayName, sel.label),
             },
             () => DetailPanel.doInstall(client, appId, sel.label)
           );
           vscode.window
             .showInformationMessage(
-              `[${app.displayName}] ${sel.label} 安装成功，请重新加载窗口生效`,
-              '重新加载'
+              t('installSuccessReload', app.displayName, sel.label),
+              t('reload')
             )
             .then((action) => {
-              if (action === '重新加载') {
+              if (action === t('reload')) {
                 void vscode.commands.executeCommand('workbench.action.reloadWindow');
               }
             });
         } catch (e) {
           vscode.window.showErrorMessage(
-            `[${app.displayName}] ${mode === 'download' ? '下载' : '安装'}版本 ${sel.label} 失败：${
+            t(
+              'versionOpFailed',
+              app.displayName,
+              mode === 'download' ? t('download') : t('install'),
+              sel.label,
               e instanceof Error ? e.message : String(e)
-            }`
+            )
           );
         }
       })();
@@ -318,7 +325,7 @@ export class DetailPanel {
       url = `${client.baseUrl}${url}`;
     }
     if (!url) {
-      throw new Error(`[${app.displayName}] 未找到可下载的 VSIX 包`);
+      throw new Error(t('noVsixFound', app.displayName));
     }
     const dir = path.join(os.tmpdir(), 'appstore-hub');
     fs.mkdirSync(dir, { recursive: true });
@@ -339,8 +346,8 @@ export class DetailPanel {
       defaultUri: vscode.Uri.file(
         path.join(os.homedir(), 'Downloads', `${app.name}-${version}.vsix`)
       ),
-      filters: { 'VSIX 包': ['vsix'] },
-      saveLabel: '下载',
+      filters: { [t('vsixFilter')]: ['vsix'] },
+      saveLabel: t('download'),
     });
     if (!uri) {
       return;
@@ -352,19 +359,19 @@ export class DetailPanel {
       url = `${client.baseUrl}${url}`;
     }
     if (!url) {
-      throw new Error(`[${app.displayName}] 未找到可下载的 VSIX 包`);
+      throw new Error(t('noVsixFound', app.displayName));
     }
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `正在下载 ${app.displayName} ${version}...`,
+        title: t('downloading', app.displayName, version),
       },
       () => downloadFile(url, uri.fsPath, undefined, getProxyUrl())
     );
     vscode.window
-      .showInformationMessage(`已下载：${uri.fsPath}`, '打开所在目录')
+      .showInformationMessage(t('downloaded', uri.fsPath), t('openContainingFolder'))
       .then((action) => {
-        if (action === '打开所在目录') {
+        if (action === t('openContainingFolder')) {
           void vscode.commands.executeCommand('revealFileInOS', uri);
         }
       });
@@ -405,13 +412,13 @@ export class DetailPanel {
       curVersion,
       manifest: null,
     };
-    void panel.webview.postMessage({ type: 'data', ...data });
+    safePost(panel.webview, { type: 'data', ...data });
     if (app.manifestUrl) {
       const manifest = await client
         .getJson<Record<string, unknown>>(toAbsolute(app.manifestUrl))
         .catch(() => null);
       const resources = DetailPanel.resolveResources(app, manifest, client.baseUrl);
-      void panel.webview.postMessage({ type: 'manifest', manifest, resources });
+      safePost(panel.webview, { type: 'manifest', manifest, resources });
     }
   }
 
@@ -463,20 +470,23 @@ export class DetailPanel {
     try {
       const host = new URL(baseUrl).hostname;
       if (host.endsWith('marketplace.visualstudio.com')) {
-        return 'Microsoft 市场';
+        return t('marketplaceMicrosoft');
       }
       if (host.endsWith('open-vsx.org')) {
-        return 'Open VSX 市场';
+        return t('marketplaceOpenVsx');
       }
     } catch {
       /* 忽略 */
     }
-    return '应用商店';
+    return t('marketplaceOther');
   }
 
   private static getHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, 'webview', 'detail.js')
+    );
+    const i18nUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, 'webview', 'i18n.js')
     );
     const markedUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, 'webview', 'vendor', 'marked.min.js')
@@ -491,17 +501,20 @@ export class DetailPanel {
       vscode.Uri.joinPath(extensionUri, 'webview', 'detail.css')
     );
     const nonce = crypto.randomBytes(16).toString('base64');
+    const locale = uiLocale();
     return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${locale}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data: http: https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src http: https:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${styleUri}">
-<title>应用详情</title>
+<title>${locale === 'en' ? 'Extension Details' : '应用详情'}</title>
 </head>
 <body>
 <div id="root"></div>
+<script nonce="${nonce}">window.__APPSTORE_LOCALE__ = '${locale}';</script>
+<script nonce="${nonce}" src="${i18nUri}"></script>
 <script nonce="${nonce}" src="${markedUri}"></script>
 <script nonce="${nonce}" src="${gfmHeadingIdUri}"></script>
 <script nonce="${nonce}" src="${purifyUri}"></script>

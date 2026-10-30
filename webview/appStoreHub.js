@@ -4,22 +4,33 @@
   var vscode = acquireVsCodeApi();
   var msgId = 0;
   var pending = {};
+  var t = (typeof window.t === 'function') ? window.t : function (key) { return key; };
 
   window.addEventListener('error', function (e) {
     console.log('[webview] uncaught error:', e.message, e.filename, e.lineno);
   });
+
+  // webview 已被销毁（dispose）时 postMessage 会抛「Webview is disposed」，
+  // 统一吞掉，避免异步回调（超时重试、轮询等）在页面销毁后报未捕获错误
+  function safePost(msg) {
+    try {
+      vscode.postMessage(msg);
+    } catch (e) {
+      /* webview 已销毁，忽略 */
+    }
+  }
 
   function request(type, payload) {
     return new Promise(function (resolve, reject) {
       var id = ++msgId;
       pending[id] = { resolve: resolve, reject: reject };
       console.log('[webview] send', id, type, JSON.stringify(payload || {}));
-      vscode.postMessage({ id: id, type: type, payload: payload || {} });
+      safePost({ id: id, type: type, payload: payload || {} });
       setTimeout(function () {
         if (pending[id]) {
           delete pending[id];
           console.log('[webview] timeout', id, type);
-          reject(new Error('请求超时：' + type + ' 未收到插件端响应'));
+          reject(new Error(t('requestTimeout', type)));
         }
       }, 30000);
     });
@@ -28,7 +39,7 @@
   function log(msg) {
     console.log('[webview]', msg);
     try {
-      vscode.postMessage({ type: 'log', message: msg });
+      safePost({ type: 'log', message: msg });
     } catch (e) {
       /* 忽略 */
     }
@@ -59,7 +70,7 @@
         p.resolve(m.data);
       } else {
         console.log('[webview] reject', m.id, m.error);
-        p.reject(new Error(m.error || '请求失败'));
+        p.reject(new Error(m.error || t('requestFailed')));
       }
     } else if (m.type === 'refresh') {
       loadAll();
@@ -107,16 +118,16 @@
   function renderShell() {
     document.body.innerHTML =
       '<header class="header">' +
-      '<div class="logo"><div class="logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 8h16l-1.2 11.2a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8Z" fill="#fff" fill-opacity="0.95"/><path d="M9 10V7a3 3 0 0 1 6 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></div><span>插件中心</span></div>' +
-      '<div class="search-box"><input id="searchInput" type="text" placeholder="搜索扩展，支持 @installed / @category: / @sort: / @tag:..." /></div>' +
-      '<select id="sourceSelect" class="source-select" title="切换软件源"></select>' +
-      '<button id="sourceManageBtn" class="btn secondary small" title="管理软件源">软件源</button>' +
+      '<div class="logo"><div class="logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 8h16l-1.2 11.2a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8Z" fill="#fff" fill-opacity="0.95"/><path d="M9 10V7a3 3 0 0 1 6 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></div><span>' + t('app.title') + '</span></div>' +
+      '<div class="search-box"><input id="searchInput" type="text" placeholder="' + t('search.placeholder') + '" /></div>' +
+      '<select id="sourceSelect" class="source-select" title="' + t('source.switch.title') + '"></select>' +
+      '<button id="sourceManageBtn" class="btn secondary small" title="' + t('source.switch.title') + '">' + t('source.manage') + '</button>' +
       '<span id="statusBadge" class="status-badge"></span>' +
-      '<select id="viewSelect" class="view-select" title="选择视图">' +
-      '<option value="popular">热门</option>' +
-      '<option value="recentlyUpdated">最近更新</option>' +
+      '<select id="viewSelect" class="view-select" title="' + t('view.select.title') + '">' +
+      '<option value="popular">' + t('view.popular') + '</option>' +
+      '<option value="recentlyUpdated">' + t('view.recentlyUpdated') + '</option>' +
       '</select>' +
-      '<button id="filterBtn" class="btn icon-btn" title="筛选与排序">&#9881;</button>' +
+      '<button id="filterBtn" class="btn icon-btn" title="' + t('filter.title') + '">&#9881;</button>' +
       '</header>' +
       '<div id="filterPanel" class="filter-panel hidden"></div>' +
       '<div id="content" class="content"></div>' +
@@ -209,11 +220,11 @@
   /** 渲染过滤与排序面板（分类 / 排序 / 搜索过滤器），对齐 VS Code 漏斗菜单 */
   function renderFilterPanel() {
     var sortHtml = [
-      ['relevance', '相关度'],
-      ['installs', '安装量'],
-      ['rating', '评分'],
-      ['name', '名称'],
-      ['updated', '最近更新']
+      ['relevance', t('sort.relevance')],
+      ['installs', t('sort.installs')],
+      ['rating', t('sort.rating')],
+      ['name', t('sort.name')],
+      ['updated', t('sort.updated')]
     ]
       .map(function (s) {
         return (
@@ -226,7 +237,7 @@
       .join('');
 
     var catHtml = (state.categories || []).length
-      ? '<div class="fp-section-label">分类</div>' +
+      ? '<div class="fp-section-label">' + t('filter.category') + '</div>' +
         '<div class="fp-cats">' +
         state.categories
           .map(function (c) {
@@ -236,11 +247,11 @@
           })
           .join('') +
         '</div>'
-      : '<div class="fp-section-label">分类</div><div class="fp-loading">加载中...</div>';
+      : '<div class="fp-section-label">' + t('filter.category') + '</div><div class="fp-loading">' + t('loading') + '</div>';
 
     var instFilters = [
-      ['installed', '已安装 @installed'],
-      ['builtin', '内置 @builtin']
+      ['installed', t('filter.installed')],
+      ['builtin', t('filter.builtin')]
     ]
       .map(function (f) {
         return (
@@ -253,11 +264,11 @@
       .join('');
 
     els.filterPanel.innerHTML =
-      '<div class="fp-title">筛选与排序</div>' +
-      '<div class="fp-section-label">排序</div>' +
+      '<div class="fp-title">' + t('filter.title') + '</div>' +
+      '<div class="fp-section-label">' + t('filter.sort') + '</div>' +
       '<div class="fp-opts">' + sortHtml + '</div>' +
       catHtml +
-      '<div class="fp-section-label">搜索过滤器</div>' +
+      '<div class="fp-section-label">' + t('filter.searchFilters') + '</div>' +
       '<div class="fp-opts">' + instFilters + '</div>';
 
     els.filterPanel.querySelectorAll('input[name="fp-sort"]').forEach(function (r) {
@@ -333,7 +344,7 @@
   }
 
   function loadInstalled() {
-    setStatus('加载中...');
+    setStatus(t('loading'));
     return request('getInstalled')
       .then(function (list) {
         if (state.view !== 'installed') return;
@@ -346,11 +357,11 @@
         }
       })
       .catch(function (e) {
-        setStatus('加载失败', true);
+        setStatus(t('loadFailed'), true);
         els.content.innerHTML =
           '<div class="error-box">' +
           '<div class="msg">' + esc(e.message) + '</div>' +
-          '<button class="btn" id="retryBtn">重试</button>' +
+          '<button class="btn" id="retryBtn">' + t('retry') + '</button>' +
           '</div>';
         var retryBtn = el('retryBtn');
         if (retryBtn) retryBtn.addEventListener('click', loadInstalled);
@@ -374,23 +385,23 @@
 
   function renderInstalled(list) {
     if (!list.length) {
-      els.content.innerHTML = '<div class="state">没有已安装的扩展</div>';
+      els.content.innerHTML = '<div class="state">' + t('installed.empty') + '</div>';
       return;
     }
-    var html = '<div class="result-meta">共 ' + list.length + ' 个已安装扩展</div>';
+    var html = '<div class="result-meta">' + t('installed.count', list.length) + '</div>';
     html += '<div class="inst-list">';
     list.forEach(function (ext) {
-      var builtinTag = ext.builtin ? '<span class="tag">内置</span>' : '';
+      var builtinTag = ext.builtin ? '<span class="tag">' + t('builtin') + '</span>' : '';
       var stateTag = ext.enabled
-        ? '<span class="tag enabled-tag">启用</span>'
-        : '<span class="tag disabled-tag">已禁用</span>';
+        ? '<span class="tag enabled-tag">' + t('enabled') + '</span>'
+        : '<span class="tag disabled-tag">' + t('disabled') + '</span>';
       var ops = '';
       if (!ext.builtin) {
         ops +=
           '<button class="btn small secondary" data-ext-toggle="' + esc(ext.id) + '">' +
-          (ext.enabled ? '禁用' : '启用') +
+          (ext.enabled ? t('disable') : t('enable')) +
           '</button>' +
-          '<button class="btn small danger" data-ext-uninstall="' + esc(ext.id) + '">卸载</button>';
+          '<button class="btn small danger" data-ext-uninstall="' + esc(ext.id) + '">' + t('uninstall') + '</button>';
       }
       var letter = esc((ext.name || '?').charAt(0).toUpperCase());
       var iconHtml = ext.icon
@@ -416,11 +427,11 @@
         request('toggleExtension', { id: id })
           .then(function (d) {
             if (d && d.done) {
-              showToast('已' + (d.action || '操作') + '，重新加载窗口生效');
+              showToast(t('op.doneReload', d.action || t('enabled')));
             }
           })
           .catch(function (e) {
-            showToast('操作失败：' + e.message, true);
+            showToast(t('op.failed', t('enabled'), e.message), true);
           });
       });
     });
@@ -429,11 +440,11 @@
         var id = b.getAttribute('data-ext-uninstall');
         request('uninstallLocal', { id: id })
           .then(function () {
-            showToast('已卸载，重新加载窗口生效');
+            showToast(t('uninstalled.reload'));
             loadInstalled();
           })
           .catch(function (e) {
-            showToast('卸载失败：' + e.message, true);
+            showToast(t('op.failed', t('uninstall'), e.message), true);
           });
       });
     });
@@ -467,14 +478,14 @@
   }
 
   function openDetail(id) {
-    setStatus('打开详情...');
+    setStatus(t('detail.opening'));
     // 对齐 VS Code：把列表已加载的数据传给详情页，立即渲染主体
     var app = null;
     for (var i = 0; i < state.apps.length; i++) {
       if (state.apps[i].id === id) { app = state.apps[i]; break; }
     }
     request('openDetail', { id: id, app: app }).catch(function (e) {
-      showToast('打开详情失败：' + e.message, true);
+      showToast(t('detail.openFailed', e.message), true);
       setStatus(state.activeUrl);
     });
   }
@@ -491,7 +502,7 @@
         }
       })
       .catch(function (err) {
-        showToast('管理操作失败：' + err.message, true);
+        showToast(t('manage.failed', err.message), true);
       });
   }
 
@@ -603,7 +614,7 @@
       state.sources = d.sources || [];
       state.activeUrl = d.activeUrl || '';
       renderSourceSelect();
-      setStatus(state.sources.length ? state.activeUrl : '未配置软件源', !state.sources.length);
+      setStatus(state.sources.length ? state.activeUrl : t('source.notConfigured'), !state.sources.length);
       return state.activeUrl;
     });
   }
@@ -613,11 +624,11 @@
     state.sources.forEach(function (s) {
       html += '<option value="' + esc(s.url) + '"' + (s.url === state.activeUrl ? ' selected' : '') + '>' + esc(s.label) + '</option>';
     });
-    els.sourceSelect.innerHTML = html || '<option value="">无</option>';
+    els.sourceSelect.innerHTML = html || '<option value="">' + t('source.none') + '</option>';
   }
 
   function switchSource(url) {
-    setStatus('正在切换软件源...');
+    setStatus(t('source.switching'));
     request('setActiveSource', { url: url })
       .then(function () {
         state.activeUrl = url;
@@ -628,7 +639,7 @@
       })
       .catch(function (e) {
         setStatus(state.activeUrl);
-        showToast('切换软件源失败：' + e.message, true);
+        showToast(t('source.switchFailed', e.message), true);
       });
   }
 
@@ -639,34 +650,34 @@
       listHtml +=
         '<div class="source-item' + (isActive ? ' active' : '') + '" data-src-item="' + esc(s.url) + '">' +
         '<div class="src-fields">' +
-        '<input class="src-field-label" type="text" value="' + esc(s.label) + '" data-src-label="' + esc(s.url) + '" placeholder="源名称" />' +
-        '<input class="src-field-url" type="text" value="' + esc(s.url) + '" data-src-url="' + esc(s.url) + '" placeholder="源地址" />' +
-        '<label class="src-field-concurrent" title="并发连接：勾选后连接失败时并发赛跑（最多 3 个同时连接），适合不稳定源（如 open-vsx）；稳定源（如微软市场）建议关闭，避免并发请求触发 IP 限流">' +
-        '<input type="checkbox" data-src-concurrent="' + esc(s.url) + '"' + (s.concurrent ? ' checked' : '') + ' /> 并发' +
+        '<input class="src-field-label" type="text" value="' + esc(s.label) + '" data-src-label="' + esc(s.url) + '" placeholder="' + t('source.namePlaceholder') + '" />' +
+        '<input class="src-field-url" type="text" value="' + esc(s.url) + '" data-src-url="' + esc(s.url) + '" placeholder="' + t('source.urlPlaceholder') + '" />' +
+        '<label class="src-field-concurrent" title="' + t('source.concurrentHelp') + '">' +
+        '<input type="checkbox" data-src-concurrent="' + esc(s.url) + '"' + (s.concurrent ? ' checked' : '') + ' /> ' + t('source.concurrent') +
         '</label>' +
         '</div>' +
         '<div class="src-actions">' +
-        (isActive ? '' : '<button class="btn small secondary" data-src-active="' + esc(s.url) + '">设为当前</button>') +
-        '<button class="btn small danger" data-src-del="' + esc(s.url) + '">删除</button>' +
+        (isActive ? '' : '<button class="btn small secondary" data-src-active="' + esc(s.url) + '">' + t('source.setActive') + '</button>') +
+        '<button class="btn small danger" data-src-del="' + esc(s.url) + '">' + t('source.delete') + '</button>' +
         '</div>' +
         '</div>';
     });
     els.sourceModal.innerHTML =
       '<div class="modal">' +
-      '<div class="modal-header"><span>软件源管理</span><button class="modal-close" data-close="1">&times;</button></div>' +
+      '<div class="modal-header"><span>' + t('source.manageTitle') + '</span><button class="modal-close" data-close="1">&times;</button></div>' +
       '<div class="modal-body">' +
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">每个软件源需配置「名称」和「地址」：名称用于界面显示，地址为后端 Gallery 服务地址（需以 http:// 或 https:// 开头）。可直接修改，回车或失焦自动保存；「并发」勾选后连接失败时并发赛跑，适合不稳定源。当前激活源：<b>' + esc(state.activeUrl || '（无）') + '</b></div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + t('source.help') + '<b>' + esc(state.activeUrl || t('source.noneActive')) + '</b></div>' +
       '<div id="sourceList">' + listHtml + '</div>' +
       '<div class="form-row">' +
-      '<input id="newSrcLabel" type="text" placeholder="源名称，如：本地开发源" />' +
-      '<input id="newSrcUrl" type="text" placeholder="源地址，如：http://127.0.0.1:3000" />' +
+      '<input id="newSrcLabel" type="text" placeholder="' + t('source.newNamePlaceholder') + '" />' +
+      '<input id="newSrcUrl" type="text" placeholder="' + t('source.newUrlPlaceholder') + '" />' +
       '</div>' +
-      '<label class="src-field-concurrent" title="并发连接：勾选后连接失败时并发赛跑，适合不稳定源（如 open-vsx）；稳定源建议关闭避免触发限流">' +
-      '<input id="newSrcConcurrent" type="checkbox" /> 新源启用并发连接' +
+      '<label class="src-field-concurrent" title="' + t('source.concurrentHelpNew') + '">' +
+      '<input id="newSrcConcurrent" type="checkbox" /> ' + t('source.newConcurrent') +
       '</label>' +
-      '<div style="display:flex;justify-content:flex-end"><button id="addSrcBtn" class="btn small">添加软件源</button></div>' +
+      '<div style="display:flex;justify-content:flex-end"><button id="addSrcBtn" class="btn small">' + t('source.add') + '</button></div>' +
       '</div>' +
-      '<div class="modal-footer"><button class="btn secondary" data-close="1">关闭</button></div>' +
+      '<div class="modal-footer"><button class="btn secondary" data-close="1">' + t('close') + '</button></div>' +
       '</div>';
 
     els.sourceModal.classList.remove('hidden');
@@ -718,21 +729,21 @@
       .then(function (d) {
         state.sources = d.sources || [];
         state.activeUrl = d.activeUrl || state.activeUrl;
-        showToast(checked ? '已开启该源的并发连接' : '已关闭该源的并发连接');
+        showToast(checked ? t('source.concurrentOn') : t('source.concurrentOff'));
       })
-      .catch(function (e) { showToast('保存失败：' + e.message, true); });
+      .catch(function (e) { showToast(t('saveFailed', e.message), true); });
   }
 
   function saveEditedSource(oldUrl, input) {
     var isLabel = input.getAttribute('data-src-label') !== null;
     var value = input.value.trim();
     if (!value) {
-      showToast('软件源名称和地址不能为空', true);
+      showToast(t('source.nameUrlRequired'), true);
       openSourceModal();
       return;
     }
     if (!isLabel && !/^https?:\/\//i.test(value)) {
-      showToast('软件源地址需以 http:// 或 https:// 开头', true);
+      showToast(t('source.urlScheme'), true);
       openSourceModal();
       return;
     }
@@ -743,7 +754,7 @@
       next.label = value;
     } else {
       if (value !== oldUrl && state.sources.some(function (s) { return s.url === value; })) {
-        showToast('该软件源地址已存在', true);
+        showToast(t('source.urlExists'), true);
         openSourceModal();
         return;
       }
@@ -761,11 +772,11 @@
         state.activeUrl = d.activeUrl || state.activeUrl;
         renderSourceSelect();
         setStatus(state.activeUrl);
-        showToast('已保存软件源');
+        showToast(t('source.saved'));
         openSourceModal();
         loadAll();
       })
-      .catch(function (e) { showToast('保存失败：' + e.message, true); });
+      .catch(function (e) { showToast(t('saveFailed', e.message), true); });
   }
 
   function collectSources(extra) {
@@ -778,15 +789,15 @@
     var label = el('newSrcLabel').value.trim();
     var url = el('newSrcUrl').value.trim();
     if (!label || !url) {
-      showToast('请填写软件源名称和地址', true);
+      showToast(t('source.fillRequired'), true);
       return;
     }
     if (!/^https?:\/\//i.test(url)) {
-      showToast('软件源地址需以 http:// 或 https:// 开头', true);
+      showToast(t('source.urlScheme'), true);
       return;
     }
     if (state.sources.some(function (s) { return s.url === url; })) {
-      showToast('该软件源已存在', true);
+      showToast(t('source.exists'), true);
       return;
     }
     var concurrent = !!el('newSrcConcurrent') && el('newSrcConcurrent').checked;
@@ -796,16 +807,16 @@
         state.activeUrl = d.activeUrl || state.activeUrl;
         renderSourceSelect();
         setStatus(state.activeUrl);
-        showToast('已添加软件源：' + label);
+        showToast(t('source.added', label));
         openSourceModal();
       })
-      .catch(function (e) { showToast('添加失败：' + e.message, true); });
+      .catch(function (e) { showToast(t('addFailed', e.message), true); });
   }
 
   function removeSource(url) {
     var list = state.sources.filter(function (s) { return s.url !== url; });
     if (!list.length) {
-      showToast('至少需要保留一个软件源', true);
+      showToast(t('source.keepOne'), true);
       return;
     }
     request('setSources', { sources: list })
@@ -814,11 +825,11 @@
         state.activeUrl = d.activeUrl || state.activeUrl;
         renderSourceSelect();
         setStatus(state.activeUrl);
-        showToast('已删除软件源');
+        showToast(t('source.deleted'));
         openSourceModal();
         loadAll();
       })
-      .catch(function (e) { showToast('删除失败：' + e.message, true); });
+      .catch(function (e) { showToast(t('deleteFailed', e.message), true); });
   }
 
   /* ---------------- list ---------------- */
@@ -832,7 +843,7 @@
       })
       .catch(function (e) {
         log('loadAll 失败：' + e.message);
-        setStatus('连接失败', true);
+        setStatus(t('connFailed'), true);
         showToast(e.message, true);
       });
   }
@@ -859,11 +870,11 @@
     var isFirst = state.page <= 1;
     state.loading = true;
     if (isFirst) {
-      setStatus('加载中...');
-      els.content.innerHTML = '<div class="state"><div class="spinner"></div>正在加载应用列表...</div>';
+      setStatus(t('loading'));
+      els.content.innerHTML = '<div class="state"><div class="spinner"></div>' + t('loadingApps') + '</div>';
     } else {
       var wrap = el('loadMoreWrap');
-      if (wrap) wrap.innerHTML = '<div class="load-more">加载中...</div>';
+      if (wrap) wrap.innerHTML = '<div class="load-more">' + t('loading') + '</div>';
     }
     var pq = parseQuery(state.keyword);
     // 排序优先级：@sort:xxx > 过滤面板排序（state.sort 已由视图默认联动）
@@ -897,20 +908,20 @@
       .catch(function (e) {
         state.loading = false;
         if (state.view !== 'market') return;
-        setStatus('连接失败', true);
+        setStatus(t('connFailed'), true);
         log('loadApps 失败：' + e.message);
         if (isFirst) {
           els.content.innerHTML =
             '<div class="error-box">' +
             '<div class="msg">' + esc(e.message) + '</div>' +
-            '<button class="btn" id="retryBtn">重试</button>' +
+            '<button class="btn" id="retryBtn">' + t('retry') + '</button>' +
             '</div>';
           var retryBtn = el('retryBtn');
           if (retryBtn) retryBtn.addEventListener('click', function () { state.page = 1; loadApps(); });
         } else {
           var wrap = el('loadMoreWrap');
           if (wrap) {
-            wrap.innerHTML = '<div class="load-more error" id="loadMoreRetry">加载失败，点击重试</div>';
+            wrap.innerHTML = '<div class="load-more error" id="loadMoreRetry">' + t('loadMoreFailed') + '</div>';
             var r = el('loadMoreRetry');
             if (r) r.addEventListener('click', function () { loadApps(); });
           }
@@ -920,10 +931,10 @@
 
   function renderGrid() {
     if (!state.apps.length) {
-      els.content.innerHTML = '<div class="state">没有找到匹配的应用</div>';
+      els.content.innerHTML = '<div class="state">' + t('apps.empty') + '</div>';
       return;
     }
-    var html = '<div class="result-meta">共 ' + state.total + ' 个应用</div>';
+    var html = '<div class="result-meta">' + t('apps.count', state.total) + '</div>';
     html += '<div class="app-grid">';
     state.apps.forEach(function (app) {
       html += appCard(app);
@@ -965,10 +976,10 @@
     if (!wrap) return;
     state.hasMore = state.apps.length < state.total;
     if (state.hasMore) {
-      wrap.innerHTML = '<div id="loadMore" class="load-more">加载中...</div>';
+      wrap.innerHTML = '<div id="loadMore" class="load-more">' + t('loading') + '</div>';
       initInfiniteScroll();
     } else if (state.apps.length) {
-      wrap.innerHTML = '<div class="load-more end">已加载全部 ' + state.total + ' 个应用</div>';
+      wrap.innerHTML = '<div class="load-more end">' + t('apps.allLoaded', state.total) + '</div>';
     }
   }
 
@@ -982,25 +993,25 @@
     var updatable = installed && !!app.updatable;
     var btn = '';
     if (updatable) {
-      btn = '<button class="btn small" data-install="' + esc(app.id) + '">更新</button>';
+      btn = '<button class="btn small" data-install="' + esc(app.id) + '">' + t('update') + '</button>';
     } else if (!installed && app.hasPackage) {
-      btn = '<button class="btn small" data-install="' + esc(app.id) + '">安装</button>';
+      btn = '<button class="btn small" data-install="' + esc(app.id) + '">' + t('install') + '</button>';
     } else if (!installed) {
-      btn = '<button class="btn secondary small" disabled>演示应用</button>';
+      btn = '<button class="btn secondary small" disabled>' + t('demo') + '</button>';
     }
     var stats = [];
     if (app.rating > 0) {
       stats.push('⭐ ' + app.rating.toFixed(1) + (app.ratingCount ? ' (' + app.ratingCount + ')' : ''));
     }
     if (app.downloadCount > 0) {
-      stats.push(fmtCount(app.downloadCount) + ' 下载');
+      stats.push(t('downloads', fmtCount(app.downloadCount)));
     }
     var badges = '';
     if (updatable) {
-      badges += '<span class="tag updatable-tag">更新可用</span>';
+      badges += '<span class="tag updatable-tag">' + t('updatable') + '</span>';
     }
     if (installed) {
-      badges += '<span class="tag installed-tag">已安装</span>';
+      badges += '<span class="tag installed-tag">' + t('installed') + '</span>';
     }
     return '' +
       '<div class="app-card" data-open="' + esc(app.id) + '">' +
@@ -1034,15 +1045,15 @@
 
   function action(type, id) {
     var labels = {
-      install: '安装',
-      uninstall: '卸载',
-      update: '更新',
-      download: '下载'
+      install: t('install'),
+      uninstall: t('uninstall'),
+      update: t('update'),
+      download: t('download')
     };
-    showToast('正在' + labels[type] + '...');
+    showToast(t('action.doing', labels[type]));
     request(type, { id: id })
       .then(function () {
-        showToast(labels[type] + '成功');
+        showToast(t('action.done', labels[type]));
         if (type !== 'download') {
           loadLocalExtensions().then(function () {
             state.page = 1;
@@ -1052,7 +1063,7 @@
         }
       })
       .catch(function (e) {
-        showToast(labels[type] + '失败：' + e.message, true);
+        showToast(t('action.failed', labels[type], e.message), true);
       });
   }
 

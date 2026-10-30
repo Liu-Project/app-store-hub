@@ -17,6 +17,8 @@ import {
   setActiveSource,
   setSources,
 } from './config';
+import { t, uiLocale } from './i18n';
+import { safePost } from './safePost';
 
 interface WebviewMessage {
   id: number;
@@ -77,14 +79,14 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
   refresh() {
     this.client = new ApiClient(this.getServerUrl());
     if (this.view) {
-      void this.view.webview.postMessage({ type: 'refresh' });
+      safePost(this.view.webview, { type: 'refresh' });
     }
   }
 
   /** 按分类回到主面板（详情页分类点击时调用） */
   searchCategory(category: string) {
     if (this.view) {
-      void this.view.webview.postMessage({ type: 'searchCategory', category });
+      safePost(this.view.webview, { type: 'searchCategory', category });
       void vscode.commands.executeCommand('appStoreHub.main.focus');
     }
   }
@@ -98,7 +100,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
       console.log(
         `[panel] reply type=${msg.type} id=${msg.id} ok=${!error} error=${error ?? ''} data=${data === null ? 'null' : typeof data}`
       );
-      void webview.postMessage({ id: msg.id, ok: !error, data, error });
+      safePost(webview, { id: msg.id, ok: !error, data, error });
     };
     const t0 = Date.now();
     // webview 调试日志上报：无请求 id，直接打印后返回，不回包
@@ -120,7 +122,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'setActiveSource': {
           const url = String((msg.payload as Record<string, unknown>)?.url ?? '');
           if (!url) {
-            reply(null, '软件源地址不能为空');
+            reply(null, t('sourceUrlEmpty'));
             break;
           }
           await setActiveSource(url);
@@ -133,7 +135,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
           const list = (msg.payload as Record<string, unknown>)?.sources as
             SourceConfig[] | undefined;
           if (!Array.isArray(list)) {
-            reply(null, '软件源数据格式错误');
+            reply(null, t('sourceDataInvalid'));
             break;
           }
           await setSources(list);
@@ -202,7 +204,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'openDetail': {
           const id = String((msg.payload as Record<string, unknown>)?.id ?? '');
           if (!id) {
-            reply(null, '缺少应用 id');
+            reply(null, t('appIdMissing'));
             break;
           }
           // 列表已加载的 app 数据（来自卡片点击），详情页直接使用，无需等待全量查询
@@ -210,7 +212,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
           reply({ opened: true });
           void DetailPanel.show(this.extensionUri, this.client, id, initialApp).catch((e) => {
             void vscode.window.showErrorMessage(
-              `打开应用详情失败：${e instanceof Error ? e.message : String(e)}`
+              t('openDetailFailed', e instanceof Error ? e.message : String(e))
             );
           });
           break;
@@ -221,7 +223,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'selectVersion': {
           const id = String((msg.payload as Record<string, unknown>)?.id ?? '');
           if (!id) {
-            reply(null, '缺少应用 id');
+            reply(null, t('appIdMissing'));
             break;
           }
           await this.doSelectVersion(id);
@@ -231,7 +233,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'manageApp': {
           const id = String((msg.payload as Record<string, unknown>)?.id ?? '');
           if (!id) {
-            reply(null, '缺少应用 id');
+            reply(null, t('appIdMissing'));
             break;
           }
           const result = await this.doManageApp(id);
@@ -259,18 +261,18 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'toggleExtension': {
           const id = String((msg.payload as Record<string, unknown>)?.id ?? '');
           if (!id) {
-            reply(null, '缺少扩展 id');
+            reply(null, t('appIdMissing'));
             break;
           }
-          const action = await vscode.window.showQuickPick(['禁用', '启用'], {
-            placeHolder: `${id}：选择操作`,
+          const action = await vscode.window.showQuickPick([t('disable'), t('enable')], {
+            placeHolder: t('selectActionFor', id),
           });
           if (!action) {
             reply({ done: false });
             break;
           }
           const cmd =
-            action === '禁用'
+            action === t('disable')
               ? 'workbench.extensions.disableExtension'
               : 'workbench.extensions.enableExtension';
           await vscode.commands.executeCommand(cmd, [id]);
@@ -280,7 +282,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         case 'uninstallLocal': {
           const id = String((msg.payload as Record<string, unknown>)?.id ?? '');
           if (!id) {
-            reply(null, '缺少扩展 id');
+            reply(null, t('appIdMissing'));
             break;
           }
           await vscode.commands.executeCommand('workbench.extensions.uninstallExtension', id);
@@ -337,7 +339,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
           break;
         }
         default:
-          reply(null, `未知消息类型：${msg.type}`);
+          reply(null, t('unknownMessage', msg.type));
       }
       log(`[panel] msg type=${msg.type} id=${msg.id} 处理完成（${Date.now() - t0}ms）`);
     } catch (e) {
@@ -521,20 +523,21 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     const app = this.withLocalInstallState(await this.client.getApp(id));
     const versions = (app.versions || []).filter((v) => v.hasPackage);
     if (!versions.length) {
-      vscode.window.showInformationMessage(`[${app.displayName}] 暂无可安装的版本包`);
+      vscode.window.showInformationMessage(t('noInstallableVersion', app.displayName));
       return;
     }
     const current = app.installedVersion || app.version;
     const pick = vscode.window.createQuickPick();
     pick.title =
       mode === 'download'
-        ? `选择要下载的版本：${app.displayName}`
-        : `选择要安装的版本：${app.displayName}`;
-    pick.placeholder = mode === 'download' ? '选择一个版本下载 .vsix' : '选择一个版本安装';
+        ? t('titleDownloadVersion', app.displayName)
+        : t('titleInstallVersion', app.displayName);
+    pick.placeholder =
+      mode === 'download' ? t('placeholderDownloadVersion') : t('placeholderInstallVersion');
     pick.items = versions.map((v) => ({
       label: v.version,
-      description: v.version === current ? '当前版本' : '',
-      detail: v.date ? `发布于 ${v.date}` : '',
+      description: v.version === current ? t('currentVersion') : '',
+      detail: v.date ? t('releasedOn', v.date) : '',
     }));
     pick.onDidChangeSelection((items) => {
       const sel = items[0];
@@ -550,32 +553,36 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
           }
           if (sel.label === current) {
             vscode.window.showInformationMessage(
-              `[${app.displayName}] 版本 ${sel.label} 已安装，无需重复安装`
+              t('versionAlreadyInstalled', app.displayName, sel.label)
             );
             return;
           }
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.Notification,
-              title: `正在安装 ${app.displayName} ${sel.label}...`,
+              title: t('installingVersion', app.displayName, sel.label),
             },
             () => this.doInstall({ id, version: sel.label })
           );
           vscode.window
             .showInformationMessage(
-              `[${app.displayName}] ${sel.label} 安装成功，请重新加载窗口生效`,
-              '重新加载'
+              t('installSuccessReload', app.displayName, sel.label),
+              t('reload')
             )
             .then((action) => {
-              if (action === '重新加载') {
+              if (action === t('reload')) {
                 void vscode.commands.executeCommand('workbench.action.reloadWindow');
               }
             });
         } catch (e) {
           vscode.window.showErrorMessage(
-            `[${app.displayName}] ${mode === 'download' ? '下载' : '安装'}版本 ${sel.label} 失败：${
+            t(
+              'versionOpFailed',
+              app.displayName,
+              mode === 'download' ? t('download') : t('install'),
+              sel.label,
               e instanceof Error ? e.message : String(e)
-            }`
+            )
           );
         }
       })();
@@ -593,66 +600,66 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     const versions = (app.versions || []).filter((v) => v.hasPackage);
     const items: vscode.QuickPickItem[] = [];
     if (versions.length) {
-      items.push({ label: '安装其他版本', description: '选择历史版本并安装' });
-      items.push({ label: '下载其他版本', description: '选择历史版本并下载 .vsix 安装包' });
+      items.push({ label: t('installOtherVersion'), description: t('installHistory', app.displayName) });
+      items.push({ label: t('downloadOtherVersion'), description: t('downloadHistory', app.displayName) });
     }
     if (app.installed) {
       if (app.updatable) {
-        items.push({ label: '更新', description: `更新到 ${app.version}` });
+        items.push({ label: t('update'), description: `→ ${app.version}` });
       }
-      items.push({ label: '卸载', description: '卸载该扩展' });
+      items.push({ label: t('uninstall') });
     } else if (app.hasPackage) {
-      items.push({ label: '安装', description: `安装 ${app.version}` });
+      items.push({ label: t('install'), description: `${app.version}` });
     }
     if (!items.length) {
-      vscode.window.showInformationMessage(`[${app.displayName}] 无可执行的管理操作`);
+      vscode.window.showInformationMessage(t('noManageAction', app.displayName));
       return { changed: false };
     }
-    items.push({ label: '复制扩展 ID', description: `复制 ${app.publisher}.${app.name} 到剪贴板` });
+    items.push({ label: t('copyExtId'), description: `${app.publisher}.${app.name}` });
     const sel = await vscode.window.showQuickPick(items, {
-      placeHolder: `管理：${app.displayName}`,
+      placeHolder: t('managePlaceholder', app.displayName),
     });
     if (!sel) {
       return { changed: false };
     }
-    if (sel.label === '复制扩展 ID') {
+    if (sel.label === t('copyExtId')) {
       await vscode.env.clipboard.writeText(`${app.publisher}.${app.name}`);
-      vscode.window.showInformationMessage(`已复制扩展 ID：${app.publisher}.${app.name}`);
+      vscode.window.showInformationMessage(t('copiedExtId', `${app.publisher}.${app.name}`));
       return { changed: false };
     }
-    if (sel.label === '安装其他版本') {
+    if (sel.label === t('installOtherVersion')) {
       await this.doSelectVersion(id, 'install');
       return { changed: false };
     }
-    if (sel.label === '下载其他版本') {
+    if (sel.label === t('downloadOtherVersion')) {
       await this.doSelectVersion(id, 'download');
       return { changed: false };
     }
-    if (sel.label === '更新') {
+    if (sel.label === t('update')) {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `正在更新 ${app.displayName}...`,
+          title: t('updating', app.displayName),
         },
         () => this.doUpdate({ id })
       );
       return { changed: true };
     }
-    if (sel.label === '卸载') {
+    if (sel.label === t('uninstall')) {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `正在卸载 ${app.displayName}...`,
+          title: t('uninstalling', app.displayName),
         },
         () => this.doUninstall({ id })
       );
       return { changed: true };
     }
-    if (sel.label === '安装') {
+    if (sel.label === t('install')) {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `正在安装 ${app.displayName}...`,
+          title: t('installing', app.displayName),
         },
         () => this.doInstall({ id })
       );
@@ -728,7 +735,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
       url = `${this.client.baseUrl}${url}`;
     }
     if (!url) {
-      throw new Error(`[${app.displayName}] 未找到可下载的 VSIX 包`);
+      throw new Error(t('noVsixFound', app.displayName));
     }
     return url;
   }
@@ -752,8 +759,8 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
       defaultUri: vscode.Uri.file(
         path.join(os.homedir(), 'Downloads', `${app.name}-${version}.vsix`)
       ),
-      filters: { 'VSIX 包': ['vsix'] },
-      saveLabel: '下载',
+      filters: { [t('vsixFilter')]: ['vsix'] },
+      saveLabel: t('download'),
     });
     if (!uri) {
       return;
@@ -762,14 +769,14 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `正在下载 ${app.displayName} ${version}...`,
+        title: t('downloading', app.displayName, version),
       },
       () => downloadFile(url, uri.fsPath, undefined, getProxyUrl())
     );
     vscode.window
-      .showInformationMessage(`已下载：${uri.fsPath}`, '打开所在目录')
+      .showInformationMessage(t('downloaded', uri.fsPath), t('openContainingFolder'))
       .then((action) => {
-        if (action === '打开所在目录') {
+        if (action === t('openContainingFolder')) {
           void vscode.commands.executeCommand('revealFileInOS', uri);
         }
       });
@@ -779,21 +786,27 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'webview', 'appStoreHub.js')
     );
+    const i18nUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'webview', 'i18n.js')
+    );
     const styleUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'webview', 'appStoreHub.css')
     );
     const nonce = crypto.randomBytes(16).toString('base64');
+    const locale = uiLocale();
     return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${locale}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data: http: https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src http: https:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${styleUri}">
-<title>插件中心</title>
+<title>${locale === 'en' ? 'App Store Hub' : '插件中心'}</title>
 </head>
 <body>
 <div id="app"></div>
+<script nonce="${nonce}">window.__APPSTORE_LOCALE__ = '${locale}';</script>
+<script nonce="${nonce}" src="${i18nUri}"></script>
 <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

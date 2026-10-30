@@ -7,9 +7,13 @@ const store: Record<string, unknown> = {
   'appStoreHub.sources': [],
   'appStoreHub.activeSource': '',
   'appStoreHub.installMode': 'auto',
+  'appStoreHub.language': 'auto',
 };
 
 const vscodeStub = {
+  env: {
+    language: 'zh-cn',
+  },
   workspace: {
     getConfiguration: (section: string) => ({
       get: <T>(key: string, def: T): T => (store as Record<string, T>)[`${section}.${key}`] ?? def,

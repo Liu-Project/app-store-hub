@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AppStoreHubPanel } from './appStoreHubPanel';
 import { initLogger } from './logger';
+import { t } from './i18n';
 
 let panelProvider: AppStoreHubPanel | undefined;
 
@@ -32,7 +33,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const cfg = vscode.workspace.getConfiguration('appStoreHub');
       const cur = cfg.get<boolean>('debug', true);
       await cfg.update('debug', !cur, vscode.ConfigurationTarget.Global);
-      const msg = `插件中心调试日志已${cur ? '关闭' : '开启'}`;
+      const msg = cur ? t('debugLogOff') : t('debugLogOn');
       void vscode.window.showInformationMessage(msg);
       if (cur) {
         // 关闭后清空历史输出，避免误读旧日志

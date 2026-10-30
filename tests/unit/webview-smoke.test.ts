@@ -121,4 +121,52 @@ describe('webview 初始化冒烟测试', () => {
       '不应只匹配带双引号的 src'
     );
   });
+
+  it('i18n.js 在最小 DOM 环境初始化并提供 t()（默认中文）', () => {
+    const calls: unknown[] = [];
+    const sandbox = makeSandbox(calls);
+    sandbox.window.__APPSTORE_LOCALE__ = undefined;
+    assert.doesNotThrow(() => {
+      vm.runInNewContext(readWebview('i18n.js'), sandbox, { filename: 'i18n.js' });
+    }, 'i18n.js 初始化不应抛出异常');
+    assert.strictEqual(typeof sandbox.window.t, 'function', '应提供 window.t');
+    assert.strictEqual(sandbox.window.t('install'), '安装', '默认应为中文文案');
+    assert.strictEqual(sandbox.window.t('no.such.key'), 'no.such.key', '未知 key 回退为 key');
+  });
+
+  it('i18n.js 支持英文切换（__APPSTORE_LOCALE__=en）', () => {
+    const calls: unknown[] = [];
+    const sandbox = makeSandbox(calls);
+    sandbox.window.__APPSTORE_LOCALE__ = 'en';
+    vm.runInNewContext(readWebview('i18n.js'), sandbox, { filename: 'i18n.js' });
+    assert.strictEqual(sandbox.window.t('install'), 'Install');
+    assert.strictEqual(sandbox.window.t('update'), 'Update');
+  });
+
+  it('webview 脚本引用的所有 i18n key 都已在 i18n.js 字典中定义', () => {
+    const i18nSrc = readWebview('i18n.js');
+    const zhStart = i18nSrc.indexOf('var zh = {');
+    const enStart = i18nSrc.indexOf('var en = {');
+    const zhBlock = i18nSrc.slice(zhStart, enStart);
+    const enBlock = i18nSrc.slice(enStart);
+    const zhKeys = new Set(
+      [...zhBlock.matchAll(/^\s*'([a-zA-Z0-9._]+)':/gm)].map((m) => m[1])
+    );
+    const enKeys = new Set(
+      [...enBlock.matchAll(/^\s*'([a-zA-Z0-9._]+)':/gm)].map((m) => m[1])
+    );
+    const used = new Set<string>();
+    ['appStoreHub.js', 'detail.js'].forEach((f) => {
+      const src = readWebview(f);
+      const re = /[^.]\bt\((['"])([a-zA-Z0-9._]+)\1/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(src))) {
+        used.add(m[2]);
+      }
+    });
+    const missingZh = [...used].filter((k) => !zhKeys.has(k));
+    const missingEn = [...used].filter((k) => !enKeys.has(k));
+    assert.deepStrictEqual(missingZh, [], `i18n.js 中文缺 key: ${missingZh.join(', ')}`);
+    assert.deepStrictEqual(missingEn, [], `i18n.js 英文缺 key: ${missingEn.join(', ')}`);
+  });
 });

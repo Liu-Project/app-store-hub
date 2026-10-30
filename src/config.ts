@@ -20,6 +20,14 @@ export interface SourceConfig {
 
 export type InstallMode = 'auto' | 'manual';
 
+export type Language = 'auto' | 'zh-cn' | 'en';
+
+/** 界面语言：auto 跟随 VS Code 界面语言（zh 前缀为中文，其余为英文），可显式指定 zh-cn / en */
+export function getLanguage(): Language {
+  const v = vscode.workspace.getConfiguration(SECTION).get<string>('language', 'auto');
+  return v === 'zh-cn' || v === 'en' ? v : 'auto';
+}
+
 function normalizeUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
 }

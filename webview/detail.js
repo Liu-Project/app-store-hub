@@ -2,6 +2,7 @@
   'use strict';
 
   var vscode = acquireVsCodeApi();
+  var t = (typeof window.t === 'function') ? window.t : function (key) { return key; };
   var state = { app: null, curVersion: '', activeTab: 'Details', manifest: null, pendingContent: {}, resources: null, tabHtml: {}, imageCache: {} };
 
   // 渲染引擎：直接复制 VS Code 扩展详情 README 渲染链（markdownDocumentRenderer.ts renderMarkdownDocument）
@@ -32,7 +33,13 @@
   }
 
   function post(type, payload) {
-    vscode.postMessage({ type: type, payload: payload || {} });
+    // webview 已被销毁（dispose）时 postMessage 会抛「Webview is disposed」，
+    // 统一吞掉，避免异步回调（图片下载、内容补全等）在页面销毁后报未捕获错误
+    try {
+      vscode.postMessage({ type: type, payload: payload || {} });
+    } catch (e) {
+      /* webview 已销毁，忽略 */
+    }
   }
 
   function toast(text, isError) {
@@ -74,7 +81,7 @@
       if (p) {
         var html = markdown(m.text || '', m.url);
         if (!m.text) {
-          html = '<p class="nocontent">' + esc(p.noContent || '暂无内容。') + '</p>';
+          html = '<p class="nocontent">' + esc(p.noContent || t('noContent')) + '</p>';
         }
         state.tabHtml[p.tab] = html;
         delete state.pendingContent[m.url];
@@ -100,7 +107,7 @@
         document.querySelectorAll('img[data-img-src="' + m.url + '"]').forEach(function (img) {
           img.removeAttribute('data-img-src');
           img.setAttribute('src', IMG_BROKEN);
-          img.setAttribute('title', '图片加载失败');
+          img.setAttribute('title', t('imgFailed'));
         });
       }
     }
@@ -136,17 +143,17 @@
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     var diff = (Date.now() - d.getTime()) / 1000;
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
-    if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
-    if (diff < 86400 * 30) return Math.floor(diff / 86400) + ' 天前';
-    if (diff < 86400 * 365) return Math.floor(diff / (86400 * 30)) + ' 个月前';
-    return Math.floor(diff / (86400 * 365)) + ' 年前';
+    if (diff < 60) return t('time.justNow');
+    if (diff < 3600) return t('time.minAgo', Math.floor(diff / 60));
+    if (diff < 86400) return t('time.hourAgo', Math.floor(diff / 3600));
+    if (diff < 86400 * 30) return t('time.dayAgo', Math.floor(diff / 86400));
+    if (diff < 86400 * 365) return t('time.monthAgo', Math.floor(diff / (86400 * 30)));
+    return t('time.yearAgo', Math.floor(diff / (86400 * 365)));
   }
 
   function markdown(src, baseUrl) {
-    if (!src) return '<div class="empty">无可用的自述文件。</div>';
-    if (!md) return '<div class="empty">无可用的自述文件。</div>';
+    if (!src) return '<div class="empty">' + t('readme.empty') + '</div>';
+    if (!md) return '<div class="empty">' + t('readme.empty') + '</div>';
     mdRenderBaseUrl = baseUrl || '';
     var html = md.parse(String(src));
     if (window.DOMPurify) {
@@ -165,7 +172,7 @@
   var IMG_BROKEN =
     'data:image/svg+xml;charset=utf-8,' +
     encodeURIComponent(
-      "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64'><rect width='96' height='64' fill='#f2f2f2'/><path d='M20 44 L34 30 L44 40 L56 28 L76 48' fill='none' stroke='#b0b0b0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='34' cy='26' r='5' fill='#b0b0b0'/><text x='48' y='60' font-size='10' fill='#b0b0b0' text-anchor='middle' font-family='sans-serif'>图片加载失败</text></svg>"
+      "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64'><rect width='96' height='64' fill='#f2f2f2'/><path d='M20 44 L34 30 L44 40 L56 28 L76 48' fill='none' stroke='#b0b0b0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='34' cy='26' r='5' fill='#b0b0b0'/><text x='48' y='60' font-size='10' fill='#b0b0b0' text-anchor='middle' font-family='sans-serif'>Image failed to load</text></svg>"
     );
 
   // src 属性：兼容带引号/单引号/无引号（部分 README 原文为 <img src=https://... width=...> 无引号），
@@ -293,16 +300,16 @@
     var actions = '';
     if (installed) {
       if (updatable) {
-        actions += '<span class="extension-action label update" data-act="update">更新</span>';
+        actions += '<span class="extension-action label update" data-act="update">' + t('update') + '</span>';
       }
-      actions += '<span class="extension-action label uninstall" data-act="uninstall">卸载</span>';
-      actions += '<span class="extension-action label" data-act="selectVersion">安装特定版本...</span>';
+      actions += '<span class="extension-action label uninstall" data-act="uninstall">' + t('uninstall') + '</span>';
+      actions += '<span class="extension-action label" data-act="selectVersion">' + t('installSpecificVersion') + '...</span>';
       // Auto Update checkbox（照抄 ToggleAutoUpdateForExtensionAction）
       actions +=
         '<label class="checkbox-action-item"><input type="checkbox" data-act="toggleAutoUpdate"' +
-        (app.autoUpdate ? ' checked' : '') + '><span class="auto-update-label">自动更新</span></label>';
+        (app.autoUpdate ? ' checked' : '') + '><span class="auto-update-label">' + t('autoUpdate') + '</span></label>';
     } else if (app.hasPackage) {
-      actions += '<span class="extension-action label prominent install" data-act="install">安装</span>';
+      actions += '<span class="extension-action label prominent install" data-act="install">' + t('install') + '</span>';
     }
 
     var description = app.description
@@ -331,24 +338,24 @@
     var moreInfo = '';
     if (!app.installed) {
       moreInfo +=
-        '<div class="more-info-entry"><div class="more-info-entry-name">标识符</div><code>' + esc(app.id) + '</code></div>';
+        '<div class="more-info-entry"><div class="more-info-entry-name">' + t('detail.identifier') + '</div><code>' + esc(app.id) + '</code></div>';
       if (app.version) {
         moreInfo +=
-          '<div class="more-info-entry"><div class="more-info-entry-name">版本</div><code>' + esc(app.version) + '</code></div>';
+          '<div class="more-info-entry"><div class="more-info-entry-name">' + t('detail.version') + '</div><code>' + esc(app.version) + '</code></div>';
       }
     }
     if (app.releaseDate) {
       moreInfo +=
-        '<div class="more-info-entry"><div class="more-info-entry-name">发布日期</div><div title="' + esc(app.releaseDate) + '">' + fromNow(app.releaseDate) + '</div></div>';
+        '<div class="more-info-entry"><div class="more-info-entry-name">' + t('detail.releaseDate') + '</div><div title="' + esc(app.releaseDate) + '">' + fromNow(app.releaseDate) + '</div></div>';
     }
     if (app.lastUpdated) {
       moreInfo +=
-        '<div class="more-info-entry"><div class="more-info-entry-name">最后发布</div><div title="' + esc(app.lastUpdated) + '">' + fromNow(app.lastUpdated) + '</div></div>';
+        '<div class="more-info-entry"><div class="more-info-entry-name">' + t('detail.lastUpdated') + '</div><div title="' + esc(app.lastUpdated) + '">' + fromNow(app.lastUpdated) + '</div></div>';
     }
     if (moreInfo) {
       html +=
         '<div class="more-info-container additional-details-element">' +
-        '<div class="additional-details-title">详细信息</div>' +
+        '<div class="additional-details-title">' + t('detail.info') + '</div>' +
         '<div class="more-info">' + moreInfo + '</div></div>';
     }
 
@@ -356,7 +363,7 @@
     if (app.categories && app.categories.length) {
       html +=
         '<div class="categories-container additional-details-element">' +
-        '<div class="additional-details-title">类别</div>' +
+        '<div class="additional-details-title">' + t('detail.categories') + '</div>' +
         '<div class="categories">' +
         app.categories.map(function (c) { return '<span class="category clickable" data-category="' + esc(c) + '">' + esc(c) + '</span>'; }).join('') +
         '</div></div>';
@@ -365,14 +372,14 @@
     // Resources（照抄 renderExtensionResources：Repository/Issues/License/MoreInfo）→ 扩展资源
     // repository/issues/moreInfo 由 manifest 补充（resolveResources），对齐 VS Code 展示
     var resources = [];
-    if (app.repository) resources.push(['仓库', app.repository]);
+    if (app.repository) resources.push([t('resource.repository'), app.repository]);
     if (app.issues) resources.push(['Issues', app.issues]);
-    if (app.licenseUrl) resources.push(['许可证', app.licenseUrl]);
-    if (app.moreInfoUrl) resources.push([app.moreInfoLabel || '应用商店', app.moreInfoUrl]);
+    if (app.licenseUrl) resources.push([t('resource.license'), app.licenseUrl]);
+    if (app.moreInfoUrl) resources.push([app.moreInfoLabel || t('resource.store'), app.moreInfoUrl]);
     if (resources.length) {
       html +=
         '<div class="resources-container additional-details-element">' +
-        '<div class="additional-details-title">扩展资源</div>' +
+        '<div class="additional-details-title">' + t('resource.resources') + '</div>' +
         '<div class="resources">' +
         resources.map(function (r) {
           return '<div class="resource"><a href="' + esc(r[1]) + '" target="_blank" title="' + esc(r[1]) + '">' + esc(r[0]) + '</a></div>';
@@ -387,20 +394,20 @@
   /* ---------------- Navbar（照抄 NavBar） ---------------- */
 
   function buildNavbar(app, manifest) {
-    var tabs = [{ id: 'Details', label: '细节' }];
+    var tabs = [{ id: 'Details', label: t('tab.details') }];
     if (manifest) {
-      tabs.push({ id: 'Features', label: '功能' });
+      tabs.push({ id: 'Features', label: t('tab.features') });
     }
     if (app.changelogUrl) {
-      tabs.push({ id: 'Changelog', label: '更改日志' });
+      tabs.push({ id: 'Changelog', label: t('tab.changelog') });
     }
     var deps = getDependencies(manifest);
     if (deps.length) {
-      tabs.push({ id: 'Dependencies', label: '依赖项' });
+      tabs.push({ id: 'Dependencies', label: t('tab.dependencies') });
     }
     var pack = getExtensionPack(manifest);
     if (pack.length) {
-      tabs.push({ id: 'ExtensionPack', label: '扩展包' });
+      tabs.push({ id: 'ExtensionPack', label: t('tab.extensionPack') });
     }
     return tabs;
   }
@@ -423,12 +430,12 @@
     var features = [];
 
     if (c.commands && c.commands.length) {
-      features.push({ id: 'commands', label: '命令', data: c.commands.map(function (cmd) {
+      features.push({ id: 'commands', label: t('feature.commands'), data: c.commands.map(function (cmd) {
         return { command: cmd.command || '', title: (cmd.title && cmd.title.value) || cmd.title || '', category: (cmd.category && cmd.category.value) || cmd.category || '' };
       }) });
     }
     if (c.keybindings && c.keybindings.length) {
-      features.push({ id: 'keybindings', label: '键绑定', data: c.keybindings });
+      features.push({ id: 'keybindings', label: t('feature.keybindings'), data: c.keybindings });
     }
     if (c.menus && Object.keys(c.menus).length) {
       var menus = [];
@@ -437,7 +444,7 @@
           menus.push({ where: where, command: m.command || '', when: m.when || '', group: m.group || '' });
         });
       });
-      features.push({ id: 'menus', label: '菜单', data: menus });
+      features.push({ id: 'menus', label: t('feature.menus'), data: menus });
     }
     if (c.configuration) {
       var cfg = [];
@@ -448,10 +455,10 @@
           cfg.push({ key: key, type: conf.properties[key].type || '', description: (conf.properties[key].description && conf.properties[key].description.value) || conf.properties[key].description || '' });
         });
       });
-      if (cfg.length) features.push({ id: 'configuration', label: '配置', data: cfg });
+      if (cfg.length) features.push({ id: 'configuration', label: t('feature.configuration'), data: cfg });
     }
     if (c.languages && c.languages.length) {
-      features.push({ id: 'languages', label: '语言', data: c.languages.map(function (l) { return { id: l.id || '', extensions: (l.extensions || []).join(', ') }; }) });
+      features.push({ id: 'languages', label: t('feature.languages'), data: c.languages.map(function (l) { return { id: l.id || '', extensions: (l.extensions || []).join(', ') }; }) });
     }
     if (c.viewsContainers) {
       var vc = [];
@@ -460,7 +467,7 @@
           vc.push({ id: v.id || '', title: (v.title && v.title.value) || v.title || '', location: loc });
         });
       });
-      if (vc.length) features.push({ id: 'viewsContainers', label: '视图容器', data: vc });
+      if (vc.length) features.push({ id: 'viewsContainers', label: t('feature.viewsContainers'), data: vc });
     }
     if (c.views) {
       var views = [];
@@ -469,10 +476,10 @@
           views.push({ id: v.id || '', name: (v.name && v.name.value) || v.name || '', location: loc });
         });
       });
-      if (views.length) features.push({ id: 'views', label: '视图', data: views });
+      if (views.length) features.push({ id: 'views', label: t('feature.views'), data: views });
     }
     if (c.themes && c.themes.length) {
-      features.push({ id: 'themes', label: '主题', data: c.themes.map(function (t) { return { id: t.id || '', label: (t.label && t.label.value) || t.label || '', uiTheme: t.uiTheme || '' }; }) });
+      features.push({ id: 'themes', label: t('feature.themes'), data: c.themes.map(function (t) { return { id: t.id || '', label: (t.label && t.label.value) || t.label || '', uiTheme: t.uiTheme || '' }; }) });
     }
     return features;
   }
@@ -480,46 +487,46 @@
   function featureRows(feature) {
     var rows = feature.data || [];
     if (feature.id === 'commands') {
-      return '<table><tr><th>命令</th><th>标题</th></tr>' +
+      return '<table><tr><th>' + t('col.command') + '</th><th>' + t('col.title') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.command) + '</code></p></td><td><p>' + esc(r.title + (r.category ? ' (' + r.category + ')' : '')) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'keybindings') {
-      return '<table><tr><th>键绑定</th><th>命令</th></tr>' +
+      return '<table><tr><th>' + t('col.keybinding') + '</th><th>' + t('col.command') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.key || '') + '</code></p></td><td><p><code>' + esc(r.command || '') + '</code></p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'menus') {
-      return '<table><tr><th>命令</th><th>位置</th><th>条件</th></tr>' +
+      return '<table><tr><th>' + t('col.command') + '</th><th>' + t('col.where') + '</th><th>' + t('col.when') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.command) + '</code></p></td><td><p>' + esc(r.where) + '</p></td><td><p>' + esc(r.when) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'configuration') {
-      return '<table><tr><th>键</th><th>类型</th><th>描述</th></tr>' +
+      return '<table><tr><th>' + t('col.key') + '</th><th>' + t('col.type') + '</th><th>' + t('col.description') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.key) + '</code></p></td><td><p>' + esc(r.type) + '</p></td><td><p>' + esc(r.description) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'languages') {
-      return '<table><tr><th>Id</th><th>扩展</th></tr>' +
+      return '<table><tr><th>Id</th><th>' + t('col.extensions') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.id) + '</code></p></td><td><p>' + esc(r.extensions) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'viewsContainers') {
-      return '<table><tr><th>Id</th><th>标题</th><th>位置</th></tr>' +
+      return '<table><tr><th>Id</th><th>' + t('col.title') + '</th><th>' + t('col.location') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.id) + '</code></p></td><td><p>' + esc(r.title) + '</p></td><td><p>' + esc(r.location) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'views') {
-      return '<table><tr><th>Id</th><th>名称</th><th>位置</th></tr>' +
+      return '<table><tr><th>Id</th><th>' + t('col.name') + '</th><th>' + t('col.location') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.id) + '</code></p></td><td><p>' + esc(r.name) + '</p></td><td><p>' + esc(r.location) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
     if (feature.id === 'themes') {
-      return '<table><tr><th>Id</th><th>标签</th><th>UI 主题</th></tr>' +
+      return '<table><tr><th>Id</th><th>' + t('col.label') + '</th><th>' + t('col.uiTheme') + '</th></tr>' +
         rows.map(function (r) { return '<tr><td><p><code>' + esc(r.id) + '</code></p></td><td><p>' + esc(r.label) + '</p></td><td><p>' + esc(r.uiTheme) + '</p></td></tr>'; }).join('') +
         '</table>';
     }
-    return '<div class="empty">无数据。</div>';
+    return '<div class="empty">' + t('noData') + '</div>';
   }
 
   /* ---------------- 主渲染 ---------------- */
@@ -620,20 +627,20 @@
         applyCachedImages(container);
         return;
       }
-      loadMarkdown(container, app.readmeUrl, '无可用的自述文件。', 'Details');
+      loadMarkdown(container, app.readmeUrl, t('readme.empty'), 'Details');
     } else if (id === 'Changelog') {
       if (state.tabHtml.Changelog) {
         container.innerHTML = state.tabHtml.Changelog;
         applyCachedImages(container);
         return;
       }
-      loadMarkdown(container, app.changelogUrl, '无可用的更改日志。', 'Changelog');
+      loadMarkdown(container, app.changelogUrl, t('changelog.empty'), 'Changelog');
     } else if (id === 'Features') {
       renderFeaturesTab(container, features);
     } else if (id === 'Dependencies') {
-      renderExtensionsList(container, getDependencies(manifest), '没有依赖项');
+      renderExtensionsList(container, getDependencies(manifest), t('deps.empty'));
     } else if (id === 'ExtensionPack') {
-      renderExtensionsList(container, getExtensionPack(manifest), '没有扩展');
+      renderExtensionsList(container, getExtensionPack(manifest), t('pack.empty'));
     }
   }
 
@@ -657,7 +664,7 @@
   /* Features tab：可折叠分组（对齐 VS Code ExtensionFeaturesTab：details/summary，点标题展开/收起） */
   function renderFeaturesTab(container, features) {
     if (!features.length) {
-      container.innerHTML = '<p class="nocontent">未贡献任何功能。</p>';
+      container.innerHTML = '<p class="nocontent">' + t('features.empty') + '</p>';
       return;
     }
     var html = '<div class="subcontent feature-contributions">';

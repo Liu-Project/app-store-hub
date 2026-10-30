@@ -10,7 +10,11 @@
 
 [![Open VSX 版本](https://img.shields.io/open-vsx/v/Liu-Hongcun/appstore-hub?label=Open%20VSX)](https://open-vsx.org/extension/Liu-Hongcun/appstore-hub)
 [![Open VSX 下载量](https://img.shields.io/open-vsx/dt/Liu-Hongcun/appstore-hub)](https://open-vsx.org/extension/Liu-Hongcun/appstore-hub)
+[![GitHub Stars](https://img.shields.io/github/stars/Liu-Project/app-store-hub?style=social)](https://github.com/Liu-Project/app-store-hub)
+[![CI](https://img.shields.io/github/actions/workflow/status/Liu-Project/app-store-hub/ci.yml?branch=master&label=CI)](https://github.com/Liu-Project/app-store-hub/actions)
 [![许可证](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
+[简体中文](./README.md) · [English](./README.en.md)
 
 </div>
 
@@ -27,6 +31,7 @@
 - **完整生命周期管理** — 安装、卸载、更新扩展，并支持选择并安装指定版本
 - **多软件源** — 下拉框随时切换，界面上即可添加 / 删除软件源，每个源独立对接后端服务
 - **标准 Gallery 协议** — 兼容 VS Code `extensionsGallery` 协议（`/extensionquery` / `vspackage` / `asset`），可对接任意实现该协议的后端
+- **中英文界面** — 默认跟随 VS Code 界面语言自动切换，也可在设置中显式指定 `zh-cn` / `en`
 - **网络可靠性** — 原生 Socket 直连、失败自动重试、并发赛跑、可配置代理与超时；外部截图经代理下载后回传展示
 
 ## 使用
@@ -49,6 +54,7 @@
 
 | 配置项 | 默认值 | 说明 |
 | --- | --- | --- |
+| `appStoreHub.language` | `auto` | 界面语言：`auto`（跟随 VS Code 界面语言，zh 前缀为中文）、`zh-cn`（简体中文）、`en`（英文） |
 | `appStoreHub.sources` | 预置 3 个源 | 软件源列表 `[{ "label": "...", "url": "http(s)://..." }]`，可配置 `concurrent` 开启并发赛跑 |
 | `appStoreHub.activeSource` | VS Code Marketplace | 当前激活的软件源地址 |
 | `appStoreHub.installMode` | `auto` | 安装方式：`auto` / `manual` |
