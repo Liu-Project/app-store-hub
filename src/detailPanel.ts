@@ -168,7 +168,11 @@ export class DetailPanel {
     }
   }
 
-  private static async doInstall(client: ApiClient, appId: string, version?: string): Promise<void> {
+  private static async doInstall(
+    client: ApiClient,
+    appId: string,
+    version?: string
+  ): Promise<void> {
     const mode = getInstallMode();
     let app: AppInfo;
     try {
@@ -318,8 +322,7 @@ export class DetailPanel {
   ): Promise<string> {
     let url = app.vsixUrl || '';
     if (version) {
-      url =
-        (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
+      url = (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
     }
     if (url && !/^https?:\/\//i.test(url)) {
       url = `${client.baseUrl}${url}`;
@@ -353,8 +356,7 @@ export class DetailPanel {
       return;
     }
     let url = app.vsixUrl || '';
-    url =
-      (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
+    url = (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
     if (url && !/^https?:\/\//i.test(url)) {
       url = `${client.baseUrl}${url}`;
     }
@@ -435,8 +437,7 @@ export class DetailPanel {
     };
     const repository =
       app.repository || (typeof m.repository === 'string' ? m.repository : m.repository?.url) || '';
-    const issues =
-      app.issues || (typeof m.bugs === 'string' ? m.bugs : m.bugs?.url) || '';
+    const issues = app.issues || (typeof m.bugs === 'string' ? m.bugs : m.bugs?.url) || '';
     const moreInfoUrl =
       app.moreInfoUrl ||
       DetailPanel.marketplaceItemUrl(baseUrl, app.publisher, app.name) ||
@@ -485,9 +486,7 @@ export class DetailPanel {
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, 'webview', 'detail.js')
     );
-    const i18nUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'webview', 'i18n.js')
-    );
+    const i18nUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'webview', 'i18n.js'));
     const markedUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, 'webview', 'vendor', 'marked.min.js')
     );

@@ -111,7 +111,9 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     log(`[panel] msg type=${msg.type} id=${msg.id}`);
     try {
       this.client = new ApiClient(this.getServerUrl());
-      log(`[panel] serverUrl=${this.getServerUrl()} proxy=${getProxyUrl() || '（未配置，将直连）'}`);
+      log(
+        `[panel] serverUrl=${this.getServerUrl()} proxy=${getProxyUrl() || '（未配置，将直连）'}`
+      );
       switch (msg.type) {
         case 'ping':
           reply({ pong: true });
@@ -345,9 +347,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       logErr(`[panel] exception type=${msg.type} id=${msg.id} err=${err}`);
-      console.log(
-        `[panel] exception type=${msg.type} id=${msg.id} err=${err}`
-      );
+      console.log(`[panel] exception type=${msg.type} id=${msg.id} err=${err}`);
       reply(null, err);
     }
   }
@@ -519,7 +519,10 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
   /**
    * 版本选择：mode=install 选择后直接安装指定版本；mode=download 选择后直接下载指定版本。
    */
-  private async doSelectVersion(id: string, mode: 'install' | 'download' = 'install'): Promise<void> {
+  private async doSelectVersion(
+    id: string,
+    mode: 'install' | 'download' = 'install'
+  ): Promise<void> {
     const app = this.withLocalInstallState(await this.client.getApp(id));
     const versions = (app.versions || []).filter((v) => v.hasPackage);
     if (!versions.length) {
@@ -600,8 +603,14 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     const versions = (app.versions || []).filter((v) => v.hasPackage);
     const items: vscode.QuickPickItem[] = [];
     if (versions.length) {
-      items.push({ label: t('installOtherVersion'), description: t('installHistory', app.displayName) });
-      items.push({ label: t('downloadOtherVersion'), description: t('downloadHistory', app.displayName) });
+      items.push({
+        label: t('installOtherVersion'),
+        description: t('installHistory', app.displayName),
+      });
+      items.push({
+        label: t('downloadOtherVersion'),
+        description: t('downloadHistory', app.displayName),
+      });
     }
     if (app.installed) {
       if (app.updatable) {
@@ -728,8 +737,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
   private async resolveVsixUrl(app: AppInfo, version?: string): Promise<string> {
     let url = app.vsixUrl || '';
     if (version) {
-      url =
-        (await this.client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
+      url = (await this.client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
     }
     if (url && !/^https?:\/\//i.test(url)) {
       url = `${this.client.baseUrl}${url}`;

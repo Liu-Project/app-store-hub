@@ -224,7 +224,9 @@ function connect(
 
     const resolvedProxy = resolveProxy(url, proxy);
     if (!resolvedProxy) {
-      log(`[netHttp] connect 直连 ${url.secure ? 'https' : 'http'}://${url.hostname}:${url.port}${url.path}`);
+      log(
+        `[netHttp] connect 直连 ${url.secure ? 'https' : 'http'}://${url.hostname}:${url.port}${url.path}`
+      );
       // 直连
       let s: Socket;
       if (url.secure) {
@@ -255,7 +257,10 @@ function connect(
     log(
       `[netHttp] connect 经代理 ${resolvedProxy.hostname}:${resolvedProxy.port} 访问 ${url.secure ? 'https' : 'http'}://${url.hostname}:${url.port}${url.path}`
     );
-    const proxyOpts: net.NetConnectOpts = { host: resolvedProxy.hostname, port: resolvedProxy.port };
+    const proxyOpts: net.NetConnectOpts = {
+      host: resolvedProxy.hostname,
+      port: resolvedProxy.port,
+    };
     const raw = net.connect(proxyOpts, () => {
       raw.removeListener('error', onError);
       if (!url.secure) {
@@ -444,12 +449,7 @@ export function httpRequest(
             proxy && !resolved.secure
               ? { ...resolved, path: `http://${resolved.host}${resolved.path}` }
               : resolved;
-          const head = buildHead(
-            options.method || 'GET',
-            headTarget,
-            reqHeaders,
-            options.body
-          );
+          const head = buildHead(options.method || 'GET', headTarget, reqHeaders, options.body);
           socket.write(head + (options.body || ''));
           let received = Buffer.alloc(0);
           socket.on('data', (chunk: Buffer) => {

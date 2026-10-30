@@ -1,5 +1,11 @@
 import { httpRequest as netRequest, HttpError, type HttpResponse } from './netHttp';
-import { getActiveSourceUrl, getConnTimeout, getProxyUrl, getRetryCount, getSources } from './config';
+import {
+  getActiveSourceUrl,
+  getConnTimeout,
+  getProxyUrl,
+  getRetryCount,
+  getSources,
+} from './config';
 import { log, logErr } from './logger';
 
 export interface AppVersion {
@@ -140,7 +146,11 @@ export function isTargetPlatformCompatible(
   versionTargetPlatform: string | undefined,
   productTargetPlatform: string
 ): boolean {
-  if (!versionTargetPlatform || versionTargetPlatform === 'universal' || versionTargetPlatform === 'undefined') {
+  if (
+    !versionTargetPlatform ||
+    versionTargetPlatform === 'universal' ||
+    versionTargetPlatform === 'undefined'
+  ) {
     return true;
   }
   return versionTargetPlatform === productTargetPlatform;
@@ -336,7 +346,9 @@ export class ApiClient {
       controller.abort();
       if (r < rounds - 1) {
         // 整轮连接失败：短暂随机延迟后进入下一轮并发
-        logErr(`[apiClient] 整轮连接失败（并发模式，第 ${r + 1}/${rounds} 轮）：${settled.error?.message ?? '未知'}`);
+        logErr(
+          `[apiClient] 整轮连接失败（并发模式，第 ${r + 1}/${rounds} 轮）：${settled.error?.message ?? '未知'}`
+        );
         await new Promise((s) => setTimeout(s, 250 + Math.random() * 400));
       }
     }
@@ -408,30 +420,30 @@ export class ApiClient {
     for (let r = 0; r < rounds; r++) {
       const controller = new AbortController();
       const batchSize = Math.min(parallel, attempts - r * parallel);
-      const batch: Promise<
-        | { ok: true; value: HttpResponse }
-        | { ok: false; error: HttpError }
-      >[] = Array.from({ length: batchSize }, () =>
-        netRequest(target, {
-          method: 'GET',
-          timeoutMs,
-          proxy,
-          binary: true,
-          signal: controller.signal,
-        }).then(
-          (value) => ({ ok: true as const, value }),
-          (e) => ({
-            ok: false as const,
-            error: e instanceof HttpError ? e : new HttpError(0, String(e?.message ?? e)),
-          })
-        )
-      );
+      const batch: Promise<{ ok: true; value: HttpResponse } | { ok: false; error: HttpError }>[] =
+        Array.from({ length: batchSize }, () =>
+          netRequest(target, {
+            method: 'GET',
+            timeoutMs,
+            proxy,
+            binary: true,
+            signal: controller.signal,
+          }).then(
+            (value) => ({ ok: true as const, value }),
+            (e) => ({
+              ok: false as const,
+              error: e instanceof HttpError ? e : new HttpError(0, String(e?.message ?? e)),
+            })
+          )
+        );
       const settled = await this.raceBatch(batch);
       if (settled.ok) {
         controller.abort();
         const res = settled.value;
         if (res.status >= 200 && res.status < 300 && res.body) {
-          const ct = String(res.headers['content-type'] || '').split(';')[0].toLowerCase();
+          const ct = String(res.headers['content-type'] || '')
+            .split(';')[0]
+            .toLowerCase();
           const mime = ct || guessMime(url);
           const dataUrl = `data:${mime};base64,${res.body}`;
           if (this.imageCache.size >= ApiClient.IMAGE_CACHE_MAX) {
@@ -489,10 +501,14 @@ export class ApiClient {
       return { ok: true as const, value };
     } catch (e) {
       if (e instanceof HttpError && e.status === 0) {
-        logErr(`[apiClient] ${options.method || 'GET'} ${path} 连接失败：${e.message}（${Date.now() - t0}ms）`);
+        logErr(
+          `[apiClient] ${options.method || 'GET'} ${path} 连接失败：${e.message}（${Date.now() - t0}ms）`
+        );
         return { ok: false as const, error: e };
       }
-      logErr(`[apiClient] ${options.method || 'GET'} ${path} 失败：${e instanceof Error ? e.message : String(e)}（${Date.now() - t0}ms）`);
+      logErr(
+        `[apiClient] ${options.method || 'GET'} ${path} 失败：${e instanceof Error ? e.message : String(e)}（${Date.now() - t0}ms）`
+      );
       throw e;
     }
   }
@@ -834,7 +850,10 @@ export class ApiClient {
 }
 
 /** 将 Gallery 扩展对象映射为插件中心内部 AppInfo */
-export function galleryToAppInfo(e: GalleryExtension, opts: { targetPlatform?: string; includePreRelease?: boolean } = {}): AppInfo {
+export function galleryToAppInfo(
+  e: GalleryExtension,
+  opts: { targetPlatform?: string; includePreRelease?: boolean } = {}
+): AppInfo {
   const productTargetPlatform = opts.targetPlatform ?? ApiClient.targetPlatform();
   const allVersions = e.versions || [];
   const top = allVersions[0] || { version: '', files: [], lastUpdated: '' };
@@ -881,7 +900,9 @@ export function galleryToAppInfo(e: GalleryExtension, opts: { targetPlatform?: s
     });
   }
   return {
-    id: e.publisher?.publisherName ? `${e.publisher.publisherName}.${e.extensionName}` : e.extensionName,
+    id: e.publisher?.publisherName
+      ? `${e.publisher.publisherName}.${e.extensionName}`
+      : e.extensionName,
     name: e.extensionName,
     displayName: e.displayName,
     publisher: (e.publisher && e.publisher.publisherName) || '',
