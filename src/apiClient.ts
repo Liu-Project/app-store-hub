@@ -716,13 +716,18 @@ export class ApiClient {
     } catch {
       /* 源不支持过滤时降级 */
     }
-    // 降级一：searchText 查询后客户端匹配（官方商店等不支持 filterType:1/7 的源）
+    // 降级一：searchText 查询后客户端匹配（官方商店等不支持 filterType:1/7 的源）；
+    // 发布者/名称匹配大小写不敏感（Gallery publisherName 保留原始大小写，VS Code 扩展 ID 归一化为小写）
     try {
       const result = await this.queryExtensions(
         { keyword: name, page: 1, pageSize: 100 },
         GALLERY_FLAGS_DETAIL
       );
-      const found = result.list.find((a) => a.publisher === publisher && a.name === name);
+      const found = result.list.find(
+        (a) =>
+          a.publisher.toLowerCase() === publisher.toLowerCase() &&
+          a.name.toLowerCase() === name.toLowerCase()
+      );
       if (found) {
         return { app: found, complete: false };
       }
@@ -731,7 +736,11 @@ export class ApiClient {
     }
     // 降级二：列表全量拉取后客户端匹配（用列表 flags，避免全量版本响应过大导致极慢）
     const all = await this.fetchAll(10, GALLERY_FLAGS_LIST);
-    const found = all.find((a) => a.publisher === publisher && a.name === name);
+    const found = all.find(
+      (a) =>
+        a.publisher.toLowerCase() === publisher.toLowerCase() &&
+        a.name.toLowerCase() === name.toLowerCase()
+    );
     if (!found) {
       throw new ApiError(404, `扩展不存在：${publisher}.${name}`);
     }
@@ -772,7 +781,7 @@ export class ApiClient {
         { keyword: id, page: 1, pageSize: 100 },
         GALLERY_FLAGS_DETAIL
       );
-      const found = result.list.find((a) => a.name === id);
+      const found = result.list.find((a) => a.name.toLowerCase() === id.toLowerCase());
       if (found) {
         return found;
       }
@@ -780,7 +789,7 @@ export class ApiClient {
       /* 继续降级 */
     }
     const all = await this.fetchAll(10, GALLERY_FLAGS_LIST);
-    const found = all.find((a) => a.name === id);
+    const found = all.find((a) => a.name.toLowerCase() === id.toLowerCase());
     if (!found) {
       throw new ApiError(404, `应用不存在：${id}`);
     }

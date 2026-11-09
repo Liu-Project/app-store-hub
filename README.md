@@ -32,6 +32,7 @@
 - **多软件源** — 下拉框随时切换，界面上即可添加 / 删除软件源，每个源独立对接后端服务
 - **标准 Gallery 协议** — 兼容 VS Code `extensionsGallery` 协议（`/extensionquery` / `vspackage` / `asset`），可对接任意实现该协议的后端
 - **中英文界面** — 默认跟随 VS Code 界面语言自动切换，也可在设置中显式指定 `zh-cn` / `en`
+- **后台自动更新** — 对齐 VS Code 原生 AutoUpdater：启动后每 5 分钟检查已安装扩展是否有更新并自动安装，受 `extensions.autoUpdate` / `extensions.autoCheckUpdates` 与详情页 Auto Update 开关控制
 - **网络可靠性** — 原生 Socket 直连、失败自动重试、并发赛跑、可配置代理与超时；外部截图经代理下载后回传展示
 
 ## 使用

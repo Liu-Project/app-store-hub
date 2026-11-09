@@ -56,6 +56,7 @@ const zh: Dict = {
   marketplaceOther: '应用商店',
   debugLogOn: '插件中心调试日志已开启',
   debugLogOff: '插件中心调试日志已关闭',
+  autoUpdatedCount: '已自动更新 {0} 个扩展，请重新加载窗口生效',
 };
 
 const en: Dict = {
@@ -111,6 +112,7 @@ const en: Dict = {
   marketplaceOther: 'App Store',
   debugLogOn: 'App Store Hub debug logging enabled',
   debugLogOff: 'App Store Hub debug logging disabled',
+  autoUpdatedCount: 'Auto-updated {0} extensions. Reload window to activate',
 };
 
 let cachedLang: Language = 'auto';

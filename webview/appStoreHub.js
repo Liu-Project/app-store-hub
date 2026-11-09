@@ -983,14 +983,28 @@
     }
   }
 
+  /** 已安装版本查找：扩展 ID 匹配大小写不敏感（VS Code ext.id 归一化为小写，Gallery 保留原始大小写） */
+  function localVersionOf(app) {
+    var key = (app.publisher + '.' + app.name).toLowerCase();
+    var keys = Object.keys(state.localExtensions);
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].toLowerCase() === key) {
+        return state.localExtensions[keys[i]];
+      }
+    }
+    return undefined;
+  }
+
   function appCard(app) {
     var tags = '';
     (app.tags || []).slice(0, 2).forEach(function (t) {
       tags += '<span class="tag">' + esc(t) + '</span>';
     });
-    var localVer = state.localExtensions[app.publisher + '.' + app.name];
+    var localVer = localVersionOf(app);
     var installed = !!app.installed || !!localVer;
     var updatable = installed && !!app.updatable;
+    // 已安装时显示本地已安装版本，未安装时显示市场版本（用户可在主界面直接看到已安装版本）
+    var shownVer = (installed && localVer) || app.version || '';
     var btn = '';
     if (updatable) {
       btn = '<button class="btn small" data-install="' + esc(app.id) + '">' + t('update') + '</button>';
@@ -1019,7 +1033,7 @@
       iconHtml(app, 'app-icon') +
       '<div class="card-info">' +
       '<div class="card-name">' + esc(app.displayName || app.name) + '</div>' +
-      '<div class="card-publisher">' + esc(app.publisher) + ' · v' + esc(app.version) + '</div>' +
+      '<div class="card-publisher">' + esc(app.publisher) + ' · v' + esc(shownVer) + '</div>' +
       (stats.length ? '<div class="card-stats">' + esc(stats.join(' · ')) + '</div>' : '') +
       '</div>' +
       '</div>' +

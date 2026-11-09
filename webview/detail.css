@@ -103,7 +103,8 @@ a:hover {
 }
 
 .extension-editor > .header > .details > .title > .name {
-  flex: 0;
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: 26px;
   line-height: 30px;
   font-weight: 600;

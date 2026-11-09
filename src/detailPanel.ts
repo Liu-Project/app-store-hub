@@ -1,11 +1,17 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
 import type { ApiClient, AppInfo } from './apiClient';
+import { downloadVsixToTmp, resolveVsixUrl } from './downloadVsix';
 import { downloadFile } from './netHttp';
 import { getInstallMode, getProxyUrl } from './config';
+import {
+  getAutoUpdateSetting,
+  isGlobalAutoUpdateEnabled,
+  setAutoUpdateSetting,
+} from './autoUpdater';
+import { compareVersions } from './version';
 import { t, uiLocale } from './i18n';
 import { safePost } from './safePost';
 
@@ -17,20 +23,29 @@ interface DetailMessage {
 export class DetailPanel {
   private static panels = new Map<
     string,
-    { panel: vscode.WebviewPanel; client: ApiClient; extensionUri: vscode.Uri }
+    {
+      panel: vscode.WebviewPanel;
+      client: ApiClient;
+      extensionUri: vscode.Uri;
+      globalState: vscode.Memento;
+    }
   >();
 
   static async show(
     extensionUri: vscode.Uri,
     client: ApiClient,
     appId: string,
-    initialApp?: AppInfo
+    initialApp?: AppInfo,
+    globalState?: vscode.Memento
   ): Promise<void> {
     const existing = DetailPanel.panels.get(appId);
     if (existing) {
       existing.client = client;
+      if (globalState) {
+        existing.globalState = globalState;
+      }
       existing.panel.reveal();
-      await DetailPanel.pushData(existing.panel, client, appId, initialApp);
+      await DetailPanel.pushData(existing.panel, client, appId, initialApp, existing.globalState);
       return;
     }
     // 对齐 VS Code 内置商城：列表点击时已加载扩展对象，直接用它立即打开详情，
@@ -46,7 +61,8 @@ export class DetailPanel {
         localResourceRoots: [extensionUri],
       }
     );
-    DetailPanel.panels.set(appId, { panel, client, extensionUri });
+    const state = globalState ?? ({} as vscode.Memento);
+    DetailPanel.panels.set(appId, { panel, client, extensionUri, globalState: state });
     panel.onDidDispose(() => {
       DetailPanel.panels.delete(appId);
     });
@@ -54,7 +70,7 @@ export class DetailPanel {
     panel.webview.onDidReceiveMessage((msg: DetailMessage) => {
       void DetailPanel.handleMessage(panel, client, appId, msg);
     });
-    await DetailPanel.pushData(panel, client, appId, initialApp);
+    await DetailPanel.pushData(panel, client, appId, initialApp, state);
   }
 
   private static async handleMessage(
@@ -66,10 +82,11 @@ export class DetailPanel {
     const post = (text: string, isError = false) => {
       safePost(panel.webview, { type: 'toast', text, isError });
     };
+    const gs = DetailPanel.panels.get(appId)?.globalState ?? ({} as vscode.Memento);
     try {
       switch (msg.type) {
         case 'getData':
-          await DetailPanel.pushData(panel, client, appId);
+          await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         case 'install':
           await vscode.window.withProgress(
@@ -80,7 +97,7 @@ export class DetailPanel {
             () => DetailPanel.doInstall(client, appId)
           );
           post(t('installSuccessGeneric'));
-          await DetailPanel.pushData(panel, client, appId);
+          await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         case 'update':
           await vscode.window.withProgress(
@@ -88,7 +105,7 @@ export class DetailPanel {
             () => DetailPanel.doUpdate(client, appId)
           );
           post(t('updateSuccessGeneric'));
-          await DetailPanel.pushData(panel, client, appId);
+          await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         case 'uninstall':
           await vscode.window.withProgress(
@@ -96,7 +113,7 @@ export class DetailPanel {
             () => DetailPanel.doUninstall(client, appId)
           );
           post(t('uninstallSuccessGeneric'));
-          await DetailPanel.pushData(panel, client, appId);
+          await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         case 'selectVersion':
           await DetailPanel.selectVersion(client, panel, appId, undefined);
@@ -108,12 +125,12 @@ export class DetailPanel {
           await DetailPanel.selectVersion(client, panel, appId, 'download');
           break;
         case 'toggleAutoUpdate': {
-          // 内置命令（源无关）：切换当前扩展的 Auto Update enablement（写入本地 storage）
-          await vscode.commands.executeCommand(
-            'workbench.extensions.action.toggleAutoUpdateForExtension',
-            appId
-          );
-          await DetailPanel.pushData(panel, client, appId);
+          // 对齐 VS Code 内置 ToggleAutoUpdateForExtensionAction：on ↔ off 两态切换，
+          // enablement 存于 appStoreHub globalState（对任意软件源安装的扩展都生效，
+          // 不再依赖 VS Code 内置命令——该命令只对 VS Code 官方 gallery 的扩展有效）
+          const setting = getAutoUpdateSetting(gs, appId);
+          await setAutoUpdateSetting(gs, appId, setting === 'on' ? 'off' : 'on');
+          await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         }
         case 'openApp': {
@@ -121,7 +138,8 @@ export class DetailPanel {
           if (id) {
             const entry = DetailPanel.panels.get(appId);
             const extUri = entry?.extensionUri ?? vscode.Uri.file('');
-            void DetailPanel.show(extUri, client, id).catch(() => undefined);
+            const entryGs = entry?.globalState;
+            void DetailPanel.show(extUri, client, id, undefined, entryGs).catch(() => undefined);
           }
           break;
         }
@@ -181,7 +199,7 @@ export class DetailPanel {
       app = await client.getApp(appId);
     }
     if (mode === 'auto' && app.hasPackage) {
-      const vsix = await DetailPanel.downloadVsix(client, app, version);
+      const vsix = await downloadVsixToTmp(client, app, version);
       await vscode.commands.executeCommand(
         'workbench.extensions.installExtension',
         vscode.Uri.file(vsix)
@@ -198,7 +216,7 @@ export class DetailPanel {
       app = await client.getApp(appId);
     }
     if (mode === 'auto' && app.hasPackage) {
-      const vsix = await DetailPanel.downloadVsix(client, app);
+      const vsix = await downloadVsixToTmp(client, app);
       await vscode.commands.executeCommand(
         'workbench.extensions.installExtension',
         vscode.Uri.file(vsix)
@@ -211,7 +229,9 @@ export class DetailPanel {
     const app = await client.getApp(appId);
     if (mode === 'auto') {
       const extId = `${app.publisher}.${app.name}`;
-      const installed = vscode.extensions.all.find((ext) => ext.id === extId);
+      const installed = vscode.extensions.all.find(
+        (ext) => ext.id.toLowerCase() === extId.toLowerCase()
+      );
       if (installed) {
         await vscode.commands.executeCommand('workbench.extensions.uninstallExtension', extId);
       }
@@ -251,7 +271,10 @@ export class DetailPanel {
       if (!op) return;
       mode = op.label === t('downloadOtherVersion') ? 'download' : 'install';
     }
-    const local = vscode.extensions.all.find((ext) => ext.id === `${app.publisher}.${app.name}`);
+    // 扩展 ID 匹配大小写不敏感（对齐 VS Code ExtensionIdentifier）
+    const local = vscode.extensions.all.find(
+      (ext) => ext.id.toLowerCase() === `${app.publisher}.${app.name}`.toLowerCase()
+    );
     const current = local ? String(local.packageJSON?.version ?? '') : app.version;
     const pick = vscode.window.createQuickPick();
     pick.title =
@@ -315,31 +338,6 @@ export class DetailPanel {
     pick.show();
   }
 
-  private static async downloadVsix(
-    client: ApiClient,
-    app: AppInfo,
-    version?: string
-  ): Promise<string> {
-    let url = app.vsixUrl || '';
-    if (version) {
-      url = (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
-    }
-    if (url && !/^https?:\/\//i.test(url)) {
-      url = `${client.baseUrl}${url}`;
-    }
-    if (!url) {
-      throw new Error(t('noVsixFound', app.displayName));
-    }
-    const dir = path.join(os.tmpdir(), 'appstore-hub');
-    fs.mkdirSync(dir, { recursive: true });
-    const dest = path.join(
-      dir,
-      `${app.name}-${version ?? app.version}-${crypto.randomBytes(4).toString('hex')}.vsix`
-    );
-    await downloadFile(url, dest, undefined, getProxyUrl());
-    return dest;
-  }
-
   private static async downloadVersionToPath(
     client: ApiClient,
     app: AppInfo,
@@ -355,14 +353,7 @@ export class DetailPanel {
     if (!uri) {
       return;
     }
-    let url = app.vsixUrl || '';
-    url = (await client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
-    if (url && !/^https?:\/\//i.test(url)) {
-      url = `${client.baseUrl}${url}`;
-    }
-    if (!url) {
-      throw new Error(t('noVsixFound', app.displayName));
-    }
+    const url = await resolveVsixUrl(client, app, version);
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -383,19 +374,25 @@ export class DetailPanel {
     panel: vscode.WebviewPanel,
     client: ApiClient,
     appId: string,
-    initialApp?: AppInfo
+    initialApp?: AppInfo,
+    globalState?: vscode.Memento
   ): Promise<void> {
     // 优先使用列表已加载数据（对齐 VS Code：点击卡片即开详情）；无则全量查询
     const app = initialApp ?? (await client.getApp(appId));
-    const local = vscode.extensions.all.find((ext) => ext.id === `${app.publisher}.${app.name}`);
+    // 扩展 ID 匹配大小写不敏感（对齐 VS Code ExtensionIdentifier：ext.id 归一化为小写，
+    // Gallery publisherName 保留原始大小写，直接 === 会导致已安装状态/版本匹配失败）
+    const local = vscode.extensions.all.find(
+      (ext) => ext.id.toLowerCase() === `${app.publisher}.${app.name}`.toLowerCase()
+    );
     const curVersion = local ? String(local.packageJSON?.version ?? '') : '';
     const toAbsolute = (u: string): string =>
       /^https?:\/\//i.test(u) ? u : `${client.baseUrl}${u}`;
-    // Auto Update 状态：与 VS Code 内置一致——读取 extensions.autoUpdate 配置（on/off）作为近似；
-    // 切换通过内置命令 toggleAutoUpdateForExtension 写入内部 storage
-    const autoUpdateConfig = vscode.workspace
-      .getConfiguration('extensions')
-      .get<string>('autoUpdate', 'on');
+    // Auto Update 状态（对齐 VS Code 内置）：单个扩展 enablement 优先，否则回退全局 extensions.autoUpdate；
+    // 切换通过 appStoreHub globalState 记录（对任意软件源安装的扩展都生效）。
+    // 全局配置兼容布尔（VS Code 默认 true）与字符串 'on'/'off' 两种形式。
+    const autoUpdateEnabled = isGlobalAutoUpdateEnabled();
+    const setting = globalState ? getAutoUpdateSetting(globalState, appId) : undefined;
+    const autoUpdate = setting === 'on' || (setting !== 'off' && autoUpdateEnabled);
     // 先发简单信息立即渲染（对齐 VS Code：列表点击即展示主体），manifest 异步到后再补功能/依赖 tab
     const data = {
       app: {
@@ -409,7 +406,9 @@ export class DetailPanel {
           : `${client.baseUrl}/api/apps/${encodeURIComponent(appId)}/changelog`,
         installed: !!local,
         installedVersion: curVersion,
-        autoUpdate: autoUpdateConfig === 'on',
+        // 可更新判定：语义化版本比较，源版本严格高于本地版本才算有更新
+        updatable: !!local && curVersion !== '' && compareVersions(app.version, curVersion) > 0,
+        autoUpdate,
       },
       curVersion,
       manifest: null,

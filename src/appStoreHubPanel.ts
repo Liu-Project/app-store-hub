@@ -7,7 +7,9 @@ import type { AppInfo } from './apiClient';
 import { ApiClient } from './apiClient';
 import { downloadFile } from './netHttp';
 import { DetailPanel } from './detailPanel';
+import { downloadVsixToTmp, resolveVsixUrl } from './downloadVsix';
 import { getProxyUrl } from './config';
+import { compareVersions } from './version';
 import { log, logErr } from './logger';
 import type { SourceConfig } from './config';
 import {
@@ -212,7 +214,13 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
           // 列表已加载的 app 数据（来自卡片点击），详情页直接使用，无需等待全量查询
           const initialApp = (msg.payload as Record<string, unknown>)?.app as AppInfo | undefined;
           reply({ opened: true });
-          void DetailPanel.show(this.extensionUri, this.client, id, initialApp).catch((e) => {
+          void DetailPanel.show(
+            this.extensionUri,
+            this.client,
+            id,
+            initialApp,
+            this.globalState
+          ).catch((e) => {
             void vscode.window.showErrorMessage(
               t('openDetailFailed', e instanceof Error ? e.message : String(e))
             );
@@ -507,11 +515,17 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
   }
 
   private withLocalInstallState(app: AppInfo): AppInfo {
-    const local = vscode.extensions.all.find((ext) => ext.id === `${app.publisher}.${app.name}`);
+    // 扩展 ID 匹配大小写不敏感（对齐 VS Code ExtensionIdentifier：ext.id 归一化为小写，
+    // 而 Gallery publisherName 保留原始大小写，直接 === 会导致已安装状态匹配失败）
+    const local = vscode.extensions.all.find(
+      (ext) => ext.id.toLowerCase() === `${app.publisher}.${app.name}`.toLowerCase()
+    );
     if (local) {
       app.installed = true;
       app.installedVersion = String(local.packageJSON?.version ?? app.version);
-      app.updatable = app.installedVersion !== app.version;
+      // 可更新判定：语义化版本比较，源版本严格高于本地版本才算有更新
+      // （本地版本高于/等于源版本时不得提示可更新，对齐 VS Code 内置扩展中心）
+      app.updatable = compareVersions(app.version, app.installedVersion) > 0;
     }
     return app;
   }
@@ -687,7 +701,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
       app = await this.client.getApp(payload.id);
     }
     if (mode === 'auto' && app.hasPackage) {
-      const vsix = await this.downloadVsix(payload.id, payload.version);
+      const vsix = await downloadVsixToTmp(this.client, app, payload.version);
       await vscode.commands.executeCommand(
         'workbench.extensions.installExtension',
         vscode.Uri.file(vsix)
@@ -702,7 +716,9 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     const app = await this.client.getApp(payload.id);
     if (mode === 'auto') {
       const extId = `${app.publisher}.${app.name}`;
-      const installed = vscode.extensions.all.find((ext) => ext.id === extId);
+      const installed = vscode.extensions.all.find(
+        (ext) => ext.id.toLowerCase() === extId.toLowerCase()
+      );
       if (installed) {
         await vscode.commands.executeCommand('workbench.extensions.uninstallExtension', extId);
       }
@@ -723,7 +739,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
       app = await this.client.getApp(payload.id);
     }
     if (mode === 'auto' && app.hasPackage) {
-      const vsix = await this.downloadVsix(payload.id, undefined);
+      const vsix = await downloadVsixToTmp(this.client, app);
       await vscode.commands.executeCommand(
         'workbench.extensions.installExtension',
         vscode.Uri.file(vsix)
@@ -733,32 +749,9 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     return app;
   }
 
-  /** 解析指定版本（缺省为最新版）的 VSIX 下载地址 */
-  private async resolveVsixUrl(app: AppInfo, version?: string): Promise<string> {
-    let url = app.vsixUrl || '';
-    if (version) {
-      url = (await this.client.getVsixUrl(app.publisher, app.name, version).catch(() => '')) || url;
-    }
-    if (url && !/^https?:\/\//i.test(url)) {
-      url = `${this.client.baseUrl}${url}`;
-    }
-    if (!url) {
-      throw new Error(t('noVsixFound', app.displayName));
-    }
-    return url;
-  }
-
   private async downloadVsix(appId: string, version?: string): Promise<string> {
     const app = await this.client.getApp(appId);
-    const url = await this.resolveVsixUrl(app, version);
-    const dir = path.join(os.tmpdir(), 'appstore-hub');
-    fs.mkdirSync(dir, { recursive: true });
-    const dest = path.join(
-      dir,
-      `${app.name}-${version ?? app.version}-${crypto.randomBytes(4).toString('hex')}.vsix`
-    );
-    await downloadFile(url, dest, undefined, getProxyUrl());
-    return dest;
+    return downloadVsixToTmp(this.client, app, version);
   }
 
   /** 选择保存位置并下载指定版本的 VSIX 包 */
@@ -773,7 +766,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     if (!uri) {
       return;
     }
-    const url = await this.resolveVsixUrl(app, version);
+    const url = await resolveVsixUrl(this.client, app, version);
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,

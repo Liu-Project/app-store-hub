@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AppStoreHubPanel } from './appStoreHubPanel';
+import { AutoUpdater } from './autoUpdater';
 import { initLogger } from './logger';
 import { t } from './i18n';
 
@@ -9,6 +10,11 @@ export function activate(context: vscode.ExtensionContext): void {
   // 立即创建「插件中心」输出通道，日志从激活即开始记录
   initLogger();
   panelProvider = new AppStoreHubPanel(context.extensionUri, context.globalState);
+
+  // 后台自动更新（对齐 VS Code 原生插件中心 AutoUpdater）：
+  // 启动后延迟首次检查，之后每 5 分钟检查已安装扩展是否有更新并自动安装
+  const autoUpdater = new AutoUpdater(context.globalState);
+  autoUpdater.start(context);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(AppStoreHubPanel.viewType, panelProvider)

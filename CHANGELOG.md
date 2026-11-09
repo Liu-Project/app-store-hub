@@ -4,6 +4,22 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.24] - 2026-11-09
+
+### 新增
+
+- **后台自动更新**（对齐 VS Code 原生扩展中心 AutoUpdater）：扩展激活后延迟 30 秒首次检查，之后每 5 分钟检查已安装扩展是否有更新并自动安装，完成后提示「已自动更新 N 个扩展，请重新加载窗口生效」。
+  - 新增 `src/autoUpdater.ts`：`AutoUpdater` 后台调度、单扩展开关（`globalState` 中 `autoUpdate:<extId>`，取值 `on`/`off`，未设置时跟随全局）、已自动安装待重启标记（重启前不重复下载安装）。
+  - 新增 `src/version.ts`（语义化版本比较，对齐 VS Code semver 规则：预发布后缀低于正式版、构建元数据不参与比较、无效版本退化为字符串比较）与 `src/downloadVsix.ts`（VSIX 解析/下载逻辑抽取，`appStoreHubPanel`/`detailPanel` 复用）。
+  - 全局开关对齐 VS Code：`extensions.autoCheckUpdates`（是否检查）与 `extensions.autoUpdate`（是否自动安装，默认 true）；`installMode=manual` 时只检测不安装。
+  - 详情页「Auto Update」开关由近似显示（仅读 `extensions.autoUpdate`）改为真实读写单扩展 enablement。
+  - 新增 `tests/unit/autoUpdater.test.ts`、`tests/unit/version.test.ts`。
+
+### 修复
+
+- **扩展 ID 大小写不敏感匹配**：Gallery 的 `publisherName`/`name` 保留原始大小写，而 VS Code `ExtensionIdentifier` 归一化为小写，直接 `===` 比较会导致已安装/可更新状态误判与降级查询匹配失败。`apiClient` 查询降级匹配、`withLocalInstallState` 已安装判断、卸载前检查均改为大小写不敏感比较。
+- **「更新可用」判定改用语义化版本比较**：源版本严格高于本地版本才算有更新（此前为字符串 `!==` 比较，本地版本高于/等于源版本时仍错误提示可更新）。
+
 ## [0.1.23] - 2026-10-30
 
 ### 新增

@@ -31,6 +31,7 @@
 - **Full lifecycle management** — install, uninstall and update extensions, and even pick a specific version to install
 - **Multiple sources** — switch sources from a dropdown at any time, add / remove sources right in the UI; each source talks to its own backend service
 - **Bilingual UI** — automatically follows your VS Code display language, or explicitly set `zh-cn` / `en` in settings
+- **Background auto-update** — aligned with VS Code's native AutoUpdater: checks installed extensions for updates every 5 minutes after startup and installs them automatically, governed by `extensions.autoUpdate` / `extensions.autoCheckUpdates` and the Auto Update toggle on the detail page
 - **Standard Gallery protocol** — compatible with the VS Code `extensionsGallery` protocol (`/extensionquery` / `vspackage` / `asset`), so you can plug in any backend that implements it
 - **Network resilience** — native socket connections, automatic retries, concurrent racing, configurable proxy and timeouts; external screenshots are downloaded through the proxy and re-served inline
 

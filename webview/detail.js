@@ -246,13 +246,20 @@
 
   function renderHeader(app) {
     var installed = !!app.installed;
-    var updatable = installed && app.installedVersion && app.installedVersion !== app.version;
+    // updatable 由扩展主机按语义化版本比较计算（源版本严格高于本地版本才算可更新，
+    // 本地版本高于/等于源版本时不得提示更新）
+    var updatable = installed && !!app.updatable;
     var icon = app.icon
       ? '<img class="icon" src="' + esc(app.icon) + '" alt="">'
       : '<div class="icon">' + esc((app.displayName || app.name || '?').charAt(0).toUpperCase()) + '</div>';
 
-    // title
-    var title = '<span class="name">' + esc(app.displayName || app.name) + '</span>';
+    // title + version（对齐 VS Code 内置：title 行右侧显示版本；
+    // 已安装时显示本地已安装版本，未安装时显示市场最新版本）
+    var titleVersion =
+      app.installed && app.installedVersion ? app.installedVersion : app.version || '';
+    var title =
+      '<span class="name">' + esc(app.displayName || app.name) + '</span>' +
+      (titleVersion ? '<span class="version">v' + esc(titleVersion) + '</span>' : '');
     // publisher + verified（照抄 PublisherWidget）
     var publisher = '';
     if (app.publisherDisplayName || app.publisher) {
