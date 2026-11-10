@@ -1,0 +1,11 @@
+{
+	"name": "zxisos-appstore-repo",
+	"version": "1.0.0",
+	"private": true,
+	"description": "ZXISOS 本地软件源（VS Code Gallery 兼容协议）",
+	"scripts": {
+		"build": "node build.js",
+		"serve": "node server.js",
+		"start": "node server.js"
+	}
+}

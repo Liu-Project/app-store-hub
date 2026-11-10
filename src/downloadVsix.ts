@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import type { ApiClient, AppInfo } from './apiClient';
 import { downloadFile } from './netHttp';
-import { getProxyUrl } from './config';
 import { t } from './i18n';
 
 /** 解析指定版本（缺省为最新版）的 VSIX 下载地址（相对路径补全为绝对 URL） */
@@ -39,6 +38,6 @@ export async function downloadVsixToTmp(
     dir,
     `${app.name}-${version ?? app.version}-${crypto.randomBytes(4).toString('hex')}.vsix`
   );
-  await downloadFile(url, dest, undefined, getProxyUrl());
+  await downloadFile(url, dest);
   return dest;
 }

@@ -17,7 +17,11 @@ export function activate(context: vscode.ExtensionContext): void {
   autoUpdater.start(context);
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(AppStoreHubPanel.viewType, panelProvider)
+    vscode.window.registerWebviewViewProvider(AppStoreHubPanel.viewType, panelProvider, {
+      // WebviewView 的 retainContextWhenHidden 必须在注册时通过 webviewOptions 设置才会生效：
+      // 切走（切换到其它活动栏视图/折叠）时保留 webview 上下文，切回时内容与滚动位置原样恢复
+      webviewOptions: { retainContextWhenHidden: true },
+    })
   );
 
   const openCommand = vscode.commands.registerCommand('appStoreHub.open', async () => {

@@ -1,11 +1,5 @@
-import { httpRequest as netRequest, HttpError, type HttpResponse } from './netHttp';
-import {
-  getActiveSourceUrl,
-  getConnTimeout,
-  getProxyUrl,
-  getRetryCount,
-  getSources,
-} from './config';
+import { httpRequest as netRequest, HttpError } from './netHttp';
+import { getActiveSourceUrl, getConnTimeout, getRetryCount, getSources } from './config';
 import { log, logErr } from './logger';
 
 export interface AppVersion {
@@ -194,33 +188,6 @@ export const GALLERY_FLAGS_LIST = 950;
 /** 详情查询 flags：全部历史版本 + 统计 + 资产 + 文件（去 LatestVersionOnly，加 IncludeVersions） */
 export const GALLERY_FLAGS_DETAIL = 0x1b7;
 
-/**
- * github.com/{owner}/{repo}/raw/{ref}/{path} → raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}
- * README 常用 raw 图片链接；github.com 本身经代理时好时坏（可挂 10s+），
- * 直连 raw 子域可跳过一次重定向跳板，减少一次失败点。
- */
-function rewriteRawGithubUrl(url: string): string {
-  const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/raw\/(.+)$/i.exec(url);
-  if (!m) {
-    return url;
-  }
-  const [, owner, repo, rest] = m;
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${rest}`;
-}
-
-/** 按 URL 后缀猜测图片 MIME（响应头无 content-type 时兜底） */
-function guessMime(url: string): string {
-  const p = url.toLowerCase().split(/[?#]/)[0];
-  if (p.endsWith('.png')) return 'image/png';
-  if (p.endsWith('.jpg') || p.endsWith('.jpeg')) return 'image/jpeg';
-  if (p.endsWith('.gif')) return 'image/gif';
-  if (p.endsWith('.webp')) return 'image/webp';
-  if (p.endsWith('.svg')) return 'image/svg+xml';
-  if (p.endsWith('.ico')) return 'image/x-icon';
-  if (p.endsWith('.bmp')) return 'image/bmp';
-  return 'image/png';
-}
-
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -235,11 +202,6 @@ export class ApiClient {
   /** getAppByName 结果缓存（仅缓存完整版本查询结果），避免重复触发大查询/限流 */
   private appCache = new Map<string, { t: number; app: AppInfo }>();
   private static readonly APP_CACHE_TTL = 5 * 60 * 1000;
-
-  /** 外部图片 data URI 缓存（会话内）：详情页与面板共享同一 ApiClient，
-   *  再次打开详情时 README 图片直接命中缓存立即显示，无需重新经代理下载大 GIF */
-  private imageCache = new Map<string, string>();
-  private static readonly IMAGE_CACHE_MAX = 200;
 
   /** 当前 VS Code 运行平台（Gallery 协议 targetPlatform 过滤用） */
   static targetPlatform(): string {
@@ -309,7 +271,7 @@ export class ApiClient {
     }
     throw new ApiError(
       0,
-      `无法连接软件源 ${this.baseUrl}（${lastError ? lastError.message : '连接失败'}）。若网络受限，请在设置中配置代理（appStoreHub.proxy 或 http.proxy）`
+      `      无法连接软件源 ${this.baseUrl}（${lastError ? lastError.message : '连接失败'}）。若网络受限，请按 VS Code 内置插件商城的方式配置 http.proxy / http.noProxy 设置`
     );
   }
 
@@ -354,7 +316,7 @@ export class ApiClient {
     }
     throw new ApiError(
       0,
-      `无法连接软件源 ${this.baseUrl}（${lastError ? lastError.message : '连接失败'}）。若网络受限，请在设置中配置代理（appStoreHub.proxy 或 http.proxy）`
+      `      无法连接软件源 ${this.baseUrl}（${lastError ? lastError.message : '连接失败'}）。若网络受限，请按 VS Code 内置插件商城的方式配置 http.proxy / http.noProxy 设置`
     );
   }
 
@@ -391,85 +353,6 @@ export class ApiClient {
     );
   }
 
-  /**
-   * 获取二进制内容（图片等）并返回 data URI，供 webview 通过代理展示外部截图。
-   * webview 的 <img> 由浏览器直连加载、不经过本扩展配置的代理，受限网络下会加载失败；
-   * 改为经扩展主机（ApiClient/netHttp，带代理/并发/重试）下载后以 base64 data URI 回传。
-   */
-  async getImageDataUrl(url: string): Promise<string> {
-    if (!/^https?:\/\//i.test(url)) {
-      return '';
-    }
-    // 跳过 github.com → raw.githubusercontent.com 的重定向跳板（github.com 经代理常挂起）
-    const target = rewriteRawGithubUrl(url);
-    // 缓存 key 用归一化后的 target：github.com/raw 与 raw.githubusercontent.com 两种形式共享缓存
-    const cached = this.imageCache.get(target);
-    if (cached) {
-      return cached;
-    }
-    // 外部图片源（github raw、CDN 等）经代理时好时坏：连接要么 2~4s 成功要么挂起直到超时。
-    // 图片下载提高并发（8）并缩短单连接超时上限（6s，仅覆盖连接建立阶段，已建立连接的
-    // 传输不受此限制）：一轮 8 个并发里命中成功连接的概率 >98%，失败连接 6s 内淘汰，
-    // 避免 10s×多轮 的长时间等待；仍保留第二轮兜底（attempts=10，rounds=2）
-    const attempts = 10;
-    const parallel = Math.min(8, attempts);
-    const rounds = Math.ceil(attempts / parallel);
-    const timeoutMs = Math.min(getConnTimeout(), 6000);
-    const proxy = getProxyUrl();
-    let lastErr: HttpError | undefined;
-    for (let r = 0; r < rounds; r++) {
-      const controller = new AbortController();
-      const batchSize = Math.min(parallel, attempts - r * parallel);
-      const batch: Promise<{ ok: true; value: HttpResponse } | { ok: false; error: HttpError }>[] =
-        Array.from({ length: batchSize }, () =>
-          netRequest(target, {
-            method: 'GET',
-            timeoutMs,
-            proxy,
-            binary: true,
-            signal: controller.signal,
-          }).then(
-            (value) => ({ ok: true as const, value }),
-            (e) => ({
-              ok: false as const,
-              error: e instanceof HttpError ? e : new HttpError(0, String(e?.message ?? e)),
-            })
-          )
-        );
-      const settled = await this.raceBatch(batch);
-      if (settled.ok) {
-        controller.abort();
-        const res = settled.value;
-        if (res.status >= 200 && res.status < 300 && res.body) {
-          const ct = String(res.headers['content-type'] || '')
-            .split(';')[0]
-            .toLowerCase();
-          const mime = ct || guessMime(url);
-          const dataUrl = `data:${mime};base64,${res.body}`;
-          if (this.imageCache.size >= ApiClient.IMAGE_CACHE_MAX) {
-            const first = this.imageCache.keys().next().value;
-            if (first !== undefined) {
-              this.imageCache.delete(first);
-            }
-          }
-          this.imageCache.set(target, dataUrl);
-          return dataUrl;
-        }
-        lastErr = new HttpError(res.status, `HTTP ${res.status}`);
-      } else {
-        if (settled.error instanceof HttpError) {
-          lastErr = settled.error;
-        }
-      }
-      controller.abort();
-      if (r < rounds - 1) {
-        await new Promise((s) => setTimeout(s, 250 + Math.random() * 400));
-      }
-    }
-    logErr(`[apiClient] 图片下载失败（${lastErr ? lastErr.message : '全部连接失败'}）：${url}`);
-    return '';
-  }
-
   /** 单次连接尝试：成功返回 {ok:true}，连接类错误返回 {ok:false}，其他错误直接抛出 */
   private async attempt<T>(
     path: string,
@@ -481,17 +364,13 @@ export class ApiClient {
     const t0 = Date.now();
     try {
       const url = /^https?:\/\//.test(path) ? path : `${this.baseUrl}${path}`;
-      const proxy = getProxyUrl();
-      log(
-        `[apiClient] ${options.method || 'GET'} ${url}${proxy ? `（代理 ${proxy}）` : '（直连）'}`
-      );
+      log(`[apiClient] ${options.method || 'GET'} ${url}`);
       const res = await netRequest(url, {
         method: options.method || 'GET',
         headers: options.headers as Record<string, string> | undefined,
         body: options.body ? String(options.body) : undefined,
         timeoutMs,
         signal,
-        proxy,
       });
       const value = (raw ? res.body : this.parseResponse<T>(res)) as T;
       if (raw && (res.status < 200 || res.status >= 300)) {

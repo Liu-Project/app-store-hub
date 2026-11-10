@@ -94,32 +94,3 @@ export function getConnTimeout(): number {
   const n = vscode.workspace.getConfiguration(SECTION).get<number>('connTimeout', 20000);
   return Number.isFinite(n) && n >= 1000 ? Math.floor(n) : 20000;
 }
-
-/**
- * 代理地址解析（对齐 VS Code 内置扩展商城）：
- * 优先级：appStoreHub.proxy > http.proxy（VS Code 标准设置）> 系统环境变量 https_proxy/http_proxy 等。
- * VS Code 从桌面图标启动时扩展进程不会继承终端导出的代理变量，必须显式配置代理才能正常访问软件源。
- */
-export function getProxyUrl(): string {
-  try {
-    const own = vscode.workspace.getConfiguration(SECTION).get<string>('proxy', '');
-    if (own && own.trim()) {
-      return own.trim();
-    }
-    const httpProxy = vscode.workspace.getConfiguration('http').get<string>('proxy', '');
-    if (httpProxy && httpProxy.trim()) {
-      return httpProxy.trim();
-    }
-  } catch {
-    /* 配置读取异常时回退环境变量 */
-  }
-  return (
-    process.env.https_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTP_PROXY ||
-    process.env.all_proxy ||
-    process.env.ALL_PROXY ||
-    ''
-  );
-}

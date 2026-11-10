@@ -1,0 +1,685 @@
+{
+  "generatedAt": "2026-11-10T07:00:17.703Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "extensions": [
+    {
+      "publisher": {
+        "publisherId": "b2ec8151-38b7-ad35-4163-7f2809743ccb",
+        "publisherName": "Liu-Hongcun",
+        "displayName": "Liu-Hongcun",
+        "flags": "verified"
+      },
+      "extensionId": "4cf7ecb2-b04b-e8fa-bee5-18b4ee973df3",
+      "extensionName": "appstore-hub",
+      "displayName": "插件中心",
+      "flags": "valid",
+      "lastUpdated": "2026-11-10T07:00:17.391Z",
+      "publishedDate": "2026-11-10T07:00:17.391Z",
+      "releaseDate": "2026-11-10T07:00:17.391Z",
+      "shortDescription": "插件中心（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面插件中心。",
+      "versions": [
+        {
+          "version": "0.1.25",
+          "lastUpdated": "2026-11-10T07:00:17.391Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.appstore-hub/0.1.25/appstore-hub-0.1.25.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.1.24",
+          "lastUpdated": "2026-11-10T04:24:51.096Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.appstore-hub/0.1.24/appstore-hub-0.1.24.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.1.23",
+          "lastUpdated": "2026-11-10T04:24:51.088Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.appstore-hub/0.1.23/appstore-hub-0.1.23.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        }
+      ],
+      "statistics": [
+        {
+          "statisticName": "install",
+          "value": 1
+        },
+        {
+          "statisticName": "averagerating",
+          "value": 5
+        },
+        {
+          "statisticName": "ratingcount",
+          "value": 1
+        }
+      ],
+      "categories": [
+        "Other"
+      ]
+    },
+    {
+      "publisher": {
+        "publisherId": "b2ec8151-38b7-ad35-4163-7f2809743ccb",
+        "publisherName": "Liu-Hongcun",
+        "displayName": "Liu-Hongcun",
+        "flags": "verified"
+      },
+      "extensionId": "f45763b7-7436-1485-f7c0-efa803bcb17f",
+      "extensionName": "file-match-compare",
+      "displayName": "文件匹配对比",
+      "flags": "valid",
+      "lastUpdated": "2026-10-26T14:15:25.834Z",
+      "publishedDate": "2026-10-26T14:15:25.834Z",
+      "releaseDate": "2026-10-26T14:15:25.834Z",
+      "shortDescription": "根据选中的文件，按用户配置的正则规则匹配/替换出配对文件（支持文件名或相对路径），并在左右视图中对比打开，支持多结果箭头跳转与序号显示。内置 HLTC/HLTP 适航用例前缀推导。",
+      "versions": [
+        {
+          "version": "0.2.0",
+          "lastUpdated": "2026-10-26T14:15:25.834Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.file-match-compare",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.file-match-compare",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.file-match-compare/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.file-match-compare/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.file-match-compare/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.file-match-compare/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.file-match-compare/0.2.0/file-match-compare-0.2.0.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.75.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        }
+      ],
+      "statistics": [
+        {
+          "statisticName": "install",
+          "value": 1
+        },
+        {
+          "statisticName": "averagerating",
+          "value": 5
+        },
+        {
+          "statisticName": "ratingcount",
+          "value": 1
+        }
+      ],
+      "categories": [
+        "Other"
+      ]
+    },
+    {
+      "publisher": {
+        "publisherId": "b2ec8151-38b7-ad35-4163-7f2809743ccb",
+        "publisherName": "Liu-Hongcun",
+        "displayName": "Liu-Hongcun",
+        "flags": "verified"
+      },
+      "extensionId": "833a30a1-f0bc-8b3c-6bcc-1a1f77a2cb9f",
+      "extensionName": "markdown-commonmark-preview",
+      "displayName": "Markdown CommonMark Preview & Editing",
+      "flags": "valid",
+      "lastUpdated": "2026-11-09T14:27:16.868Z",
+      "publishedDate": "2026-11-09T14:27:16.868Z",
+      "releaseDate": "2026-11-09T14:27:16.868Z",
+      "shortDescription": "CommonMark-style Markdown preview (custom editor with built-in-preview-identical scroll sync) plus familiar Markdown editing commands. Rendering built on open-source KaTeX / mermaid / highlight.js.",
+      "versions": [
+        {
+          "version": "0.2.11",
+          "lastUpdated": "2026-11-09T14:27:16.868Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.11/markdown-commonmark-preview-0.2.11.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.2.10",
+          "lastUpdated": "2026-11-09T14:27:16.875Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.10/markdown-commonmark-preview-0.2.10.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.2.9",
+          "lastUpdated": "2026-11-09T14:27:16.869Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.9/markdown-commonmark-preview-0.2.9.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.2.7",
+          "lastUpdated": "2026-11-09T14:27:16.872Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.7/markdown-commonmark-preview-0.2.7.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.2.6",
+          "lastUpdated": "2026-11-09T14:27:16.878Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.6/markdown-commonmark-preview-0.2.6.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "version": "0.2.5",
+          "lastUpdated": "2026-11-09T14:27:16.874Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.markdown-commonmark-preview",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/dark.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/light.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Screenshots",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/screenshots/sync.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.markdown-commonmark-preview/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.markdown-commonmark-preview/0.2.5/markdown-commonmark-preview-0.2.5.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        }
+      ],
+      "statistics": [
+        {
+          "statisticName": "install",
+          "value": 1
+        },
+        {
+          "statisticName": "averagerating",
+          "value": 5
+        },
+        {
+          "statisticName": "ratingcount",
+          "value": 1
+        }
+      ],
+      "categories": [
+        "Programming Languages",
+        "Formatters",
+        "Other"
+      ]
+    }
+  ]
+}

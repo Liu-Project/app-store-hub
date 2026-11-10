@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 import type { ApiClient, AppInfo } from './apiClient';
 import { downloadVsixToTmp, resolveVsixUrl } from './downloadVsix';
 import { downloadFile } from './netHttp';
-import { getInstallMode, getProxyUrl } from './config';
+import { getInstallMode } from './config';
 import {
   getAutoUpdateSetting,
   isGlobalAutoUpdateEnabled,
@@ -165,17 +165,6 @@ export class DetailPanel {
             text = '';
           }
           safePost(panel.webview, { type: 'content', url, text });
-          break;
-        }
-        case 'getImage': {
-          // README/Changelog 中的外部截图：webview <img> 直连不走代理会失败，
-          // 改为扩展主机下载并以 base64 data URI 回传
-          const url = String((msg.payload as Record<string, unknown>)?.url ?? '');
-          if (!url) {
-            break;
-          }
-          const dataUrl = await client.getImageDataUrl(url);
-          safePost(panel.webview, { type: 'image', url, dataUrl });
           break;
         }
         default:
@@ -359,7 +348,7 @@ export class DetailPanel {
         location: vscode.ProgressLocation.Notification,
         title: t('downloading', app.displayName, version),
       },
-      () => downloadFile(url, uri.fsPath, undefined, getProxyUrl())
+      () => downloadFile(url, uri.fsPath)
     );
     vscode.window
       .showInformationMessage(t('downloaded', uri.fsPath), t('openContainingFolder'))

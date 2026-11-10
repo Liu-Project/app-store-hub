@@ -5,7 +5,7 @@ const { store } = require('./vscode-mock');
 
 // 动态 require，确保在 mock 注册之后加载 config
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getSources, getActiveSourceUrl, getInstallMode, setSources, getProxyUrl } = require('../../src/config');
+const { getSources, getActiveSourceUrl, getInstallMode, setSources } = require('../../src/config');
 
 type SourceConfig = { label: string; url: string; concurrent?: boolean };
 
@@ -93,58 +93,5 @@ describe('config', () => {
     const sources = getSources();
     assert.strictEqual(sources.length, 2);
     assert.strictEqual(getActiveSourceUrl(), 'http://new');
-  });
-
-  describe('getProxyUrl 代理解析（对齐 VS Code 商城：appStoreHub.proxy > http.proxy > 环境变量）', () => {
-    const PROXY_ENV_KEYS = [
-      'https_proxy',
-      'HTTPS_PROXY',
-      'http_proxy',
-      'HTTP_PROXY',
-      'all_proxy',
-      'ALL_PROXY',
-    ];
-    const savedEnv: Record<string, string | undefined> = {};
-
-    beforeEach(() => {
-      PROXY_ENV_KEYS.forEach((k) => {
-        savedEnv[k] = process.env[k];
-        delete process.env[k];
-      });
-      delete store['appStoreHub.proxy'];
-      delete store['http.proxy'];
-    });
-
-    afterEach(() => {
-      PROXY_ENV_KEYS.forEach((k) => {
-        if (savedEnv[k] === undefined) {
-          delete process.env[k];
-        } else {
-          process.env[k] = savedEnv[k];
-        }
-      });
-      delete store['appStoreHub.proxy'];
-      delete store['http.proxy'];
-    });
-
-    it('appStoreHub.proxy 优先于 http.proxy', () => {
-      store['appStoreHub.proxy'] = 'http://own-proxy:8080';
-      store['http.proxy'] = 'http://http-proxy:8081';
-      assert.strictEqual(getProxyUrl(), 'http://own-proxy:8080');
-    });
-
-    it('http.proxy（VS Code 标准设置）回退', () => {
-      store['http.proxy'] = 'http://http-proxy:8081';
-      assert.strictEqual(getProxyUrl(), 'http://http-proxy:8081');
-    });
-
-    it('无配置时回退环境变量 https_proxy', () => {
-      process.env.https_proxy = 'http://env-proxy:8082';
-      assert.strictEqual(getProxyUrl(), 'http://env-proxy:8082');
-    });
-
-    it('全部缺失时返回空字符串（直连）', () => {
-      assert.strictEqual(getProxyUrl(), '');
-    });
   });
 });

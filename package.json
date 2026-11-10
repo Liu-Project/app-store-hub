@@ -2,7 +2,7 @@
   "name": "appstore-hub",
   "displayName": "插件中心",
   "description": "插件中心（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面插件中心。",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "publisher": "Liu-Hongcun",
   "author": {
     "name": "Liu-Hongcun"
@@ -184,11 +184,6 @@
           "maximum": 60000,
           "description": "单次请求的连接超时（毫秒）。open-vsx 等慢源经代理响应可达 10~15s，默认 20000。"
         },
-        "appStoreHub.proxy": {
-          "type": "string",
-          "default": "",
-          "description": "访问软件源使用的 HTTP/HTTPS 代理地址（如 http://proxy.example.com:8080）。留空时依次回退 VS Code 的 http.proxy 设置与系统环境变量 https_proxy/http_proxy。注意：VS Code 从桌面图标启动时扩展进程不继承终端导出的代理变量，必须在此或 http.proxy 显式配置代理才能正常访问软件源。"
-        },
         "appStoreHub.debug": {
           "type": "boolean",
           "default": true,
@@ -204,7 +199,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "check-format": "prettier --check \"src/**/*.ts\"",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile && npm run lint && npm run check-format",
     "test": "node scripts/test.cjs",
     "package": "vsce package --no-dependencies"
   },

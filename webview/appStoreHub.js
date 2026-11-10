@@ -867,7 +867,9 @@
   }
 
   function loadApps() {
-    var isFirst = state.page <= 1;
+    // 是否首屏：page<=1（搜索/切换视图等主动刷新）或内容区尚无应用网格
+    // （重开/切回面板时恢复的 viewState.page 可能 >1，此时首次加载无网格，必须走 renderGrid 渲染）
+    var isFirst = state.page <= 1 || !(els.content && els.content.querySelector('.app-grid'));
     state.loading = true;
     if (isFirst) {
       setStatus(t('loading'));
@@ -894,6 +896,15 @@
           return;
         }
         var list = d.list || [];
+        // 重开面板恢复的 viewState.page 可能超出当前源的总页数（如上次滚动加载后关闭、
+        // 或切换源后数据变少），首屏为空且 page>1 时回退到第 1 页重新加载，避免一片空白
+        if (isFirst && list.length === 0 && state.page > 1) {
+          state.loading = false;
+          state.page = 1;
+          saveViewState();
+          loadApps();
+          return;
+        }
         state.apps = isFirst ? list : state.apps.concat(list);
         state.total = d.total || 0;
         state.loading = false;

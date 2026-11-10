@@ -4,6 +4,27 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.25] - 2026-11-10
+
+### 重构
+
+- **网络层与代理对齐 VS Code 内置插件商城**：代理行为完全交由 VS Code 扩展宿主的代理机制（`http.proxy` / `http.noProxy` / `http.proxySupport` 设置与 `https_proxy` / `http_proxy` / `no_proxy` 环境变量，经扩展宿主 `@vscode/proxy-agent` 补丁）决定，与 VS Code 内置插件商城严格一致。
+  - 移除自定义代理实现：`src/netHttp.ts` 删除 `parseProxyUrl` / `shouldBypassProxy` / `resolveProxy` 与 CONNECT 隧道 `TunnelAgent` / `createTunnel`，请求不再手动指定 agent / Connection 头；`src/config.ts` 删除 `getProxyUrl` / `getNoProxyRules`。
+  - 移除 `appStoreHub.proxy` 配置项，代理统一走 VS Code 标准 `http.proxy` 设置与环境变量；`httpRequest` / `downloadFile` 签名简化（去掉 `proxy` / `noProxyRules` 参数），`apiClient` / `downloadVsix` / `appStoreHubPanel` / `detailPanel` 同步精简，相关单测同步删除代理解析与绕过用例。
+- **详情页 README/图标图片改由浏览器直连**：移除扩展宿主代为下载图片并转 data URI 的兜底链路（`ApiClient.getImageDataUrl`、`imageCache`、`applyCachedImages`、`getImage` 消息通道），图片直接以原始 URL 渲染，加载失败时由页面 `__imgBroken` 显示占位符；消除内网不可达 CDN 导致的扩展宿主 socket 堆积与「请求超时：getApps 未收到插件端响应」问题。
+
+### 新增
+
+- **reference-source 本地软件源**（ZXISOS VS Code Gallery 兼容协议）：新增 `reference-source/` 目录，含 `build.js` 构建脚本、`server.js` HTTP 服务、`metadata.json` 元数据与三个预置扩展素材（appstore-hub / file-match-compare / markdown-commonmark-preview）；支持 `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` 环境变量，资源地址按请求 Host 动态生成，本机与局域网均可浏览与下载扩展。
+- **`.vscodeignore` 精简打包产物**：打包 vsix 时排除 `src` / `tests` / `reference-source` / `scripts` 等目录与开发配置文件，仅保留运行时文件；同时 `*.vsix` 产物不再纳入版本库。
+
+### 修复
+
+- **切走再切回面板内容/滚动位置丢失**：`retainContextWhenHidden` 此前设置位置错误（写在 `resolveWebviewView` 的 `webview.options`，对 `WebviewView` 不生效），改为在 `registerWebviewViewProvider` 注册时通过 `webviewOptions.retainContextWhenHidden: true` 设置，切到其它视图再切回时列表内容与滚动位置原样保留。
+- **打开/切回面板一片空白（需切换软件源才刷新）**：`loadApps` 的 `isFirst` 此前以 `page<=1` 判断，而恢复的 `viewState.page` 可能 >1（上次滚动加载过），此时首屏走 `appendApps` 追加分支、内容区无应用网格导致数据被丢弃；改为以「内容区是否已有应用网格」为判断依据，恢复的页码超界（返回空）时自动回退到第 1 页重新加载。
+- **重定向跟随 `socket hang up`**：Node v19+ 全局 `http` agent 默认 keep-alive，重定向后新请求可能复用服务器已关闭的连接；收到重定向响应后立即销毁当前连接，交由重定向逻辑建立新连接。
+- **下载不完整检测**：服务器声明 `Content-Length` 但提前断连时，`downloadFile` 增加对响应 `error` / `aborted` 的监听并按已写字节数识别「下载不完整」并清理临时文件（此前 Promise 永不结算导致超时）。
+
 ## [0.1.24] - 2026-11-09
 
 ### 新增

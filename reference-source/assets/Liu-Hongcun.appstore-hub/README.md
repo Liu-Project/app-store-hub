@@ -12,9 +12,9 @@
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/Liu-Hongcun/appstore-hub)](https://open-vsx.org/extension/Liu-Hongcun/appstore-hub)
 [![GitHub Stars](https://img.shields.io/github/stars/Liu-Project/app-store-hub?style=social)](https://github.com/Liu-Project/app-store-hub)
 [![CI](https://img.shields.io/github/actions/workflow/status/Liu-Project/app-store-hub/ci.yml?branch=master&label=CI)](https://github.com/Liu-Project/app-store-hub/actions)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Liu-Project/app-store-hub/blob/HEAD/LICENSE)
 
-[English](./README.en.md) · [简体中文](./README.md)
+[English](https://github.com/Liu-Project/app-store-hub/blob/HEAD/README.md) · [简体中文](https://github.com/Liu-Project/app-store-hub/blob/HEAD/README.zh-cn.md)
 
 </div>
 
@@ -32,8 +32,9 @@
 - **Multiple sources** — switch sources from a dropdown at any time, add / remove sources right in the UI; each source talks to its own backend service
 - **Bilingual UI** — automatically follows your VS Code display language, or explicitly set `zh-cn` / `en` in settings
 - **Background auto-update** — aligned with VS Code's native AutoUpdater: checks installed extensions for updates every 5 minutes after startup and installs them automatically, governed by `extensions.autoUpdate` / `extensions.autoCheckUpdates` and the Auto Update toggle on the detail page
+- **Persistent view state** — the sidebar keeps its exact content and scroll position when you switch away and back (via `retainContextWhenHidden`)
 - **Standard Gallery protocol** — compatible with the VS Code `extensionsGallery` protocol (`/extensionquery` / `vspackage` / `asset`), so you can plug in any backend that implements it
-- **Network resilience** — native socket connections, automatic retries, concurrent racing, configurable proxy and timeouts; external screenshots are downloaded through the proxy and re-served inline
+- **Network resilience** — native socket connections that honor `http.proxy` / `http.noProxy` and environment proxy variables (same semantics as VS Code's built-in marketplace), automatic retries, concurrent racing, configurable timeouts; README/icon images are loaded directly by the webview browser with a fallback placeholder on failure
 
 ## Getting Started
 
@@ -49,6 +50,8 @@
 | Open VSX | `https://open-vsx.org/vscode/gallery` |
 | Local dev source | `http://127.0.0.1:3000` |
 
+**Local dev source** — a reference implementation (ZXISOS VS Code Gallery compatible protocol) is bundled under [`reference-source/`](https://github.com/Liu-Project/app-store-hub/blob/HEAD/reference-source/): run `npm start` there (or `node server.js`) to serve three preset extensions on `http://127.0.0.1:3000`. `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` env vars are supported.
+
 ## Configuration
 
 Configure under the `appStoreHub.*` prefix in VS Code settings (`Ctrl+,`):
@@ -59,15 +62,14 @@ Configure under the `appStoreHub.*` prefix in VS Code settings (`Ctrl+,`):
 | `appStoreHub.sources` | 3 presets | List of sources `[{ "label": "...", "url": "http(s)://..." }]`; set `concurrent` to enable connection racing |
 | `appStoreHub.activeSource` | VS Code Marketplace | URL of the currently active source |
 | `appStoreHub.installMode` | `auto` | Install mode: `auto` / `manual` |
-| `appStoreHub.proxy` | empty | HTTP/HTTPS proxy; falls back to `http.proxy` then `https_proxy` / `http_proxy` env vars |
 | `appStoreHub.retry` | `4` | Automatic retry count on connection failure (writes are never retried) |
 | `appStoreHub.connTimeout` | `20000` | Connection timeout per request (ms) |
-| `appStoreHub.debug` | `true` | Debug logging toggle (request URL, proxy, latency, retries and errors) |
+| `appStoreHub.debug` | `true` | Debug logging toggle (request URL, latency, retries and errors) |
 
 ## FAQ
 
 **Stuck on "Loading app list..."?**
-The current source is unreachable. On restricted networks, configure `appStoreHub.proxy` — note that when VS Code is launched from a desktop icon the extension host does not inherit proxy variables exported in your terminal, so configure the proxy explicitly in settings.
+The current source is unreachable. Network access follows VS Code's **built-in marketplace** semantics exactly: configure `http.proxy` / `http.noProxy` (and `http.proxySupport`) in settings, or export `https_proxy` / `http_proxy` / `no_proxy` in your environment. Note that when VS Code is launched from a desktop icon the extension host does not inherit proxy variables exported in your terminal, so configure the proxy explicitly in settings.
 
 **Can I point it at my own extension store?**
 Yes. Any backend implementing the VS Code `extensionsGallery` protocol can be added as a source.
@@ -81,11 +83,11 @@ npm test        # run unit tests
 npm run package # build the .vsix
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full contribution guide.
+See [CONTRIBUTING.md](https://github.com/Liu-Project/app-store-hub/blob/HEAD/CONTRIBUTING.md) for the full contribution guide.
 
 ## License
 
-[MIT](./LICENSE) · Changelog: [CHANGELOG.md](./CHANGELOG.md)
+[MIT](https://github.com/Liu-Project/app-store-hub/blob/HEAD/LICENSE) · Changelog: [CHANGELOG.md](https://github.com/Liu-Project/app-store-hub/blob/HEAD/CHANGELOG.md)
 
 **Credits**
 

@@ -95,22 +95,30 @@ describe('webview 初始化冒烟测试', () => {
     }, 'detail.js 初始化不应抛出异常');
   });
 
-  it('detail.js 图片代理：data-img-src 必须插入到 img 标签闭合符之前（防止落到标签外）', () => {
+  it('detail.js 图片直连：onerror 必须插入到 img 标签闭合符之前（防止落到标签外）', () => {
     // 回归防护：此前用 noImg += ' data-img-src=...' 追加，对非自闭合 <img> 会落到标签外，
     // 导致 querySelector 匹配不到（图片永不显示）且页面出现可见文本
     const src = readWebview('detail.js');
     assert.ok(
-      src.includes('noImg = noImg.replace(/\\/?>$/, function (end) {'),
-      'data-img-src 应通过替换闭合符插入到 img 标签内'
+      src.includes('tag.replace(/\\/?>$/, function (end) {'),
+      'onerror 应通过替换闭合符插入到 img 标签内'
     );
     assert.ok(
-      !src.includes("noImg += ' data-img-src="),
-      '不应再使用 += 追加 data-img-src'
+      src.includes('return \' onerror="window.__imgBroken(this)"\' + end;'),
+      '应插入 onerror 占位（浏览器直连加载失败时前端替换为破图）'
+    );
+    assert.ok(
+      !src.includes('data-img-src'),
+      '不应再使用 data-img-src 扩展宿主下载图片'
+    );
+    assert.ok(
+      !src.includes('applyCachedImages'),
+      '不应再存在 applyCachedImages 缓存回填逻辑'
     );
   });
 
-  it('detail.js 图片代理：src 匹配兼容无引号形式（<img src=https://... width=...>）', () => {
-    // python 等扩展 README 使用无引号 src，即使 DOMPurify 未规范化属性也必须能代理
+  it('detail.js 图片直连：src 匹配兼容无引号形式（<img src=https://... width=...>）', () => {
+    // python 等扩展 README 使用无引号 src，即使 DOMPurify 未规范化属性也必须能识别
     const src = readWebview('detail.js');
     assert.ok(
       src.includes('var IMG_SRC_RE = /\\bsrc\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\'|([^\\s>]+))/i;'),

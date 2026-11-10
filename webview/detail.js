@@ -3,7 +3,7 @@
 
   var vscode = acquireVsCodeApi();
   var t = (typeof window.t === 'function') ? window.t : function (key) { return key; };
-  var state = { app: null, curVersion: '', activeTab: 'Details', manifest: null, pendingContent: {}, resources: null, tabHtml: {}, imageCache: {} };
+  var state = { app: null, curVersion: '', activeTab: 'Details', manifest: null, pendingContent: {}, resources: null, tabHtml: {} };
 
   // 渲染引擎：直接复制 VS Code 扩展详情 README 渲染链（markdownDocumentRenderer.ts renderMarkdownDocument）
   //   marked + markedGfmHeadingIdPlugin（heading 锚点 id）+ DOMPurify 净化
@@ -89,26 +89,8 @@
           var container = document.getElementById('content-container');
           if (container) {
             container.innerHTML = html;
-            applyCachedImages(container);
           }
         }
-      }
-    } else if (m.type === 'image') {
-      // 外部截图经扩展主机下载完成：以 base64 data URI 替换占位图
-      if (m.url && m.dataUrl) {
-        state.imageCache[m.url] = m.dataUrl;
-        document.querySelectorAll('img[data-img-src="' + m.url + '"]').forEach(function (img) {
-          img.removeAttribute('data-img-src');
-          img.setAttribute('src', m.dataUrl);
-        });
-      } else if (m.url) {
-        // 下载失败：替换为可见的“加载失败”占位，避免 1px 透明占位造成空白
-        state.imageCache[m.url] = '';
-        document.querySelectorAll('img[data-img-src="' + m.url + '"]').forEach(function (img) {
-          img.removeAttribute('data-img-src');
-          img.setAttribute('src', IMG_BROKEN);
-          img.setAttribute('title', t('imgFailed'));
-        });
       }
     }
   });
@@ -159,14 +141,11 @@
     if (window.DOMPurify) {
       html = window.DOMPurify.sanitize(html);
     }
-    // 外部截图经扩展主机（代理/重试）下载后以 base64 data URI 展示：
-    // webview <img> 由浏览器直连加载、不走本扩展配置的代理，受限网络下会加载失败
+    // 对齐 VS Code 内置插件商城：README 图片由 webview 浏览器直接加载，
+    // 加载失败时前端替换为可见占位（不经过扩展主机下载）
     html = proxyImages(html);
     return '<div class="markdown-body">' + html + '</div>';
   }
-
-  var IMG_PLACEHOLDER =
-    'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
   // 下载失败时的可见占位（灰色破图图标 + 提示文字）
   var IMG_BROKEN =
@@ -175,8 +154,14 @@
       "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64'><rect width='96' height='64' fill='#f2f2f2'/><path d='M20 44 L34 30 L44 40 L56 28 L76 48' fill='none' stroke='#b0b0b0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='34' cy='26' r='5' fill='#b0b0b0'/><text x='48' y='60' font-size='10' fill='#b0b0b0' text-anchor='middle' font-family='sans-serif'>Image failed to load</text></svg>"
     );
 
-  // src 属性：兼容带引号/单引号/无引号（部分 README 原文为 <img src=https://... width=...> 无引号），
-  // DOMPurify 净化时会把 & 转成 &amp;，需解码回原 URL 再下载
+  /** README 图片浏览器直连加载失败时，替换为可见破图占位 */
+  window.__imgBroken = function (img) {
+    img.onerror = null;
+    img.setAttribute('src', IMG_BROKEN);
+    img.setAttribute('title', t('imgFailed'));
+  };
+
+  // src 属性：兼容带引号/单引号/无引号（部分 README 原文为 <img src=https://... width=...> 无引号）
   var IMG_SRC_RE = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 
   function decodeEntities(s) {
@@ -188,43 +173,20 @@
       .replace(/&gt;/g, '>');
   }
 
-  /** 将渲染后 HTML 中的外部 http(s) 图片替换为占位图，并请求扩展主机下载 */
+  /** 对齐 VS Code 内置插件商城：README 图片由 webview 浏览器直接加载，
+   *  仅附加 onerror 占位（加载失败时前端替换为可见破图，不经过扩展主机下载） */
   function proxyImages(html) {
     if (!html) return html;
-    var out = html.replace(/<img\b[^>]*>/gi, function (tag) {
+    return html.replace(/<img\b[^>]*>/gi, function (tag) {
       var m = tag.match(IMG_SRC_RE);
       if (!m) return tag;
       var url = decodeEntities(m[1] || m[2] || m[3] || '');
       if (!/^https?:\/\//i.test(url)) return tag;
-      var cached = state.imageCache[url];
-      if (cached) {
-        return tag.replace(IMG_SRC_RE, 'src="' + cached + '"');
-      }
-      if (state.imageCache[url] === undefined) {
-        state.imageCache[url] = null;
-        post('getImage', { url: url });
-      }
-      var noImg = tag.replace(/\s+data-img-src="[^"]*"/gi, '');
-      // 在标签闭合符（> 或 />）之前插入 data-img-src，否则属性会落到标签外，
-      // 既无法被 querySelector 匹配（图片永远不显示），又会在页面显示为可见文本
-      noImg = noImg.replace(/\/?>$/, function (end) {
-        return ' data-img-src="' + esc(url) + '"' + end;
+      if (/onerror=/i.test(tag)) return tag;
+      // 在标签闭合符（> 或 />）之前插入 onerror，否则属性会落到标签外
+      return tag.replace(/\/?>$/, function (end) {
+        return ' onerror="window.__imgBroken(this)"' + end;
       });
-      return noImg.replace(IMG_SRC_RE, 'src="' + IMG_PLACEHOLDER + '"');
-    });
-    return out;
-  }
-
-  /** 用已缓存的 data URI 替换占位图（切 tab 后重新渲染时补图） */
-  function applyCachedImages(root) {
-    if (!root) return;
-    root.querySelectorAll('img[data-img-src]').forEach(function (img) {
-      var url = img.getAttribute('data-img-src');
-      var cached = state.imageCache[url];
-      if (cached) {
-        img.removeAttribute('data-img-src');
-        img.setAttribute('src', cached);
-      }
     });
   }
 
@@ -631,14 +593,12 @@
     if (id === 'Details') {
       if (state.tabHtml.Details) {
         container.innerHTML = state.tabHtml.Details;
-        applyCachedImages(container);
         return;
       }
       loadMarkdown(container, app.readmeUrl, t('readme.empty'), 'Details');
     } else if (id === 'Changelog') {
       if (state.tabHtml.Changelog) {
         container.innerHTML = state.tabHtml.Changelog;
-        applyCachedImages(container);
         return;
       }
       loadMarkdown(container, app.changelogUrl, t('changelog.empty'), 'Changelog');

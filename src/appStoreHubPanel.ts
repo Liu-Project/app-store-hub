@@ -8,7 +8,6 @@ import { ApiClient } from './apiClient';
 import { downloadFile } from './netHttp';
 import { DetailPanel } from './detailPanel';
 import { downloadVsixToTmp, resolveVsixUrl } from './downloadVsix';
-import { getProxyUrl } from './config';
 import { compareVersions } from './version';
 import { log, logErr } from './logger';
 import type { SourceConfig } from './config';
@@ -113,9 +112,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
     log(`[panel] msg type=${msg.type} id=${msg.id}`);
     try {
       this.client = new ApiClient(this.getServerUrl());
-      log(
-        `[panel] serverUrl=${this.getServerUrl()} proxy=${getProxyUrl() || '（未配置，将直连）'}`
-      );
+      log(`[panel] serverUrl=${this.getServerUrl()}`);
       switch (msg.type) {
         case 'ping':
           reply({ pong: true });
@@ -772,7 +769,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
         location: vscode.ProgressLocation.Notification,
         title: t('downloading', app.displayName, version),
       },
-      () => downloadFile(url, uri.fsPath, undefined, getProxyUrl())
+      () => downloadFile(url, uri.fsPath)
     );
     vscode.window
       .showInformationMessage(t('downloaded', uri.fsPath), t('openContainingFolder'))
