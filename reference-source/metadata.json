@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10T07:00:17.703Z",
+  "generatedAt": "2026-11-11T05:09:45.637Z",
   "baseUrl": "http://127.0.0.1:3000",
   "extensions": [
     {
@@ -13,11 +13,61 @@
       "extensionName": "appstore-hub",
       "displayName": "插件中心",
       "flags": "valid",
-      "lastUpdated": "2026-11-10T07:00:17.391Z",
-      "publishedDate": "2026-11-10T07:00:17.391Z",
-      "releaseDate": "2026-11-10T07:00:17.391Z",
+      "lastUpdated": "2026-11-11T05:09:39.713Z",
+      "publishedDate": "2026-11-11T05:09:39.713Z",
+      "releaseDate": "2026-11-11T05:09:39.713Z",
       "shortDescription": "插件中心（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面插件中心。",
       "versions": [
+        {
+          "version": "0.1.26",
+          "lastUpdated": "2026-11-11T05:09:39.713Z",
+          "assetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "fallbackAssetUri": "http://127.0.0.1:3000/vscode/gallery/asset/Liu-Hongcun.appstore-hub",
+          "files": [
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Icons.Default",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/icon.png"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Details",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/README.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.Changelog",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/CHANGELOG.md"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.Content.License",
+              "source": "http://127.0.0.1:3000/assets/Liu-Hongcun.appstore-hub/LICENSE.txt"
+            },
+            {
+              "assetType": "Microsoft.VisualStudio.Services.VSIXPackage",
+              "source": "http://127.0.0.1:3000/plugins/Liu-Hongcun.appstore-hub/0.1.26/appstore-hub-0.1.26.vsix"
+            }
+          ],
+          "properties": [
+            {
+              "key": "Microsoft.VisualStudio.Code.Engine",
+              "value": "^1.77.0"
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionDependencies",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.ExtensionPack",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Code.LocalizedLanguages",
+              "value": ""
+            },
+            {
+              "key": "Microsoft.VisualStudio.Services.Links.Source",
+              "value": ""
+            }
+          ]
+        },
         {
           "version": "0.1.25",
           "lastUpdated": "2026-11-10T07:00:17.391Z",

@@ -3,12 +3,16 @@ import { AppStoreHubPanel } from './appStoreHubPanel';
 import { AutoUpdater } from './autoUpdater';
 import { initLogger } from './logger';
 import { t } from './i18n';
+import { setGlobalStorageUri } from './vscodeAutoUpdateSync';
 
 let panelProvider: AppStoreHubPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
   // 立即创建「插件中心」输出通道，日志从激活即开始记录
   initLogger();
+  // 记录扩展自身 globalStorageUri：用于定位 VS Code 内置扩展商店存储 state.vscdb
+  // （argv 无 --user-data-dir 时由它反推 user-data-dir）
+  setGlobalStorageUri(context.globalStorageUri.fsPath);
   panelProvider = new AppStoreHubPanel(context.extensionUri, context.globalState);
 
   // 后台自动更新（对齐 VS Code 原生插件中心 AutoUpdater）：

@@ -57,6 +57,8 @@ const zh: Dict = {
   debugLogOn: '插件中心调试日志已开启',
   debugLogOff: '插件中心调试日志已关闭',
   autoUpdatedCount: '已自动更新 {0} 个扩展，请重新加载窗口生效',
+  autoUpdateSyncRestart:
+    '已同步到内置扩展商店，完全退出并重启 VS Code 后生效（仅重新加载窗口不生效）',
 };
 
 const en: Dict = {
@@ -113,6 +115,8 @@ const en: Dict = {
   debugLogOn: 'App Store Hub debug logging enabled',
   debugLogOff: 'App Store Hub debug logging disabled',
   autoUpdatedCount: 'Auto-updated {0} extensions. Reload window to activate',
+  autoUpdateSyncRestart:
+    'Synced to the built-in Extensions view. It takes effect after fully quitting and restarting VS Code (reloading the window alone is not enough)',
 };
 
 let cachedLang: Language = 'auto';

@@ -210,7 +210,13 @@ export function downloadFile(url: string, dest: string, timeoutMs = 30000): Prom
       const cleanup = () => {
         if (!cleaned) {
           cleaned = true;
-          fs.unlink(dest, () => undefined);
+          // 同步删除：reject 抛出前必须确保临时文件已清理（异步 unlink 与 reject 存在竞态，
+          // 调用方捕获错误时文件可能仍未删除）
+          try {
+            fs.unlinkSync(dest);
+          } catch {
+            /* 文件可能尚未创建或已被删除，忽略 */
+          }
         }
       };
       const req = buildRequest(resolved, 'GET', {}, timeoutMs);

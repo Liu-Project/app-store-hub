@@ -31,7 +31,7 @@
 - **Full lifecycle management** — install, uninstall and update extensions, and even pick a specific version to install
 - **Multiple sources** — switch sources from a dropdown at any time, add / remove sources right in the UI; each source talks to its own backend service
 - **Bilingual UI** — automatically follows your VS Code display language, or explicitly set `zh-cn` / `en` in settings
-- **Background auto-update** — aligned with VS Code's native AutoUpdater: checks installed extensions for updates every 5 minutes after startup and installs them automatically, governed by `extensions.autoUpdate` / `extensions.autoCheckUpdates` and the Auto Update toggle on the detail page
+- **Background auto-update** — aligned with VS Code's native AutoUpdater: checks installed extensions for updates every 5 minutes after startup and installs them automatically, governed by `extensions.autoUpdate` / `extensions.autoCheckUpdates` and the Auto Update toggle on the detail page (bidirectionally synced with the Auto Update setting of VS Code's built-in Extensions view)
 - **Persistent view state** — the sidebar keeps its exact content and scroll position when you switch away and back (via `retainContextWhenHidden`)
 - **Standard Gallery protocol** — compatible with the VS Code `extensionsGallery` protocol (`/extensionquery` / `vspackage` / `asset`), so you can plug in any backend that implements it
 - **Network resilience** — native socket connections that honor `http.proxy` / `http.noProxy` and environment proxy variables (same semantics as VS Code's built-in marketplace), automatic retries, concurrent racing, configurable timeouts; README/icon images are loaded directly by the webview browser with a fallback placeholder on failure

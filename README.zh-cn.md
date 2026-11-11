@@ -31,7 +31,7 @@
 - **完整生命周期管理** — 安装、卸载、更新扩展，并支持选择并安装指定版本
 - **多软件源** — 下拉框随时切换，界面上即可添加 / 删除软件源，每个源独立对接后端服务
 - **中英文界面** — 默认跟随 VS Code 界面语言自动切换，也可在设置中显式指定 `zh-cn` / `en`
-- **后台自动更新** — 对齐 VS Code 原生 AutoUpdater：启动后每 5 分钟检查已安装扩展是否有更新并自动安装，受 `extensions.autoUpdate` / `extensions.autoCheckUpdates` 与详情页 Auto Update 开关控制
+- **后台自动更新** — 对齐 VS Code 原生 AutoUpdater：启动后每 5 分钟检查已安装扩展是否有更新并自动安装，受 `extensions.autoUpdate` / `extensions.autoCheckUpdates` 与详情页 Auto Update 开关控制（与 VS Code 内置「扩展:商店」的 Auto Update 双向同步）
 - **视图状态保持** — 侧边栏切走再切回时，列表内容与滚动位置原样保留（基于 `retainContextWhenHidden`）
 - **标准 Gallery 协议** — 兼容 VS Code `extensionsGallery` 协议（`/extensionquery` / `vspackage` / `asset`），可对接任意实现该协议的后端
 - **网络可靠性** — 原生 Socket 直连，代理解析与绕过语义对齐 VS Code 内置插件商城（`http.proxy` / `http.noProxy` 与环境变量代理）、失败自动重试、并发赛跑、可配置超时；README/图标图片由浏览器直连加载（不经扩展宿主中转），加载失败显示占位符

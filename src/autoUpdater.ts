@@ -6,6 +6,10 @@ import { getInstallMode } from './config';
 import { compareVersions } from './version';
 import { log, logErr } from './logger';
 import { t } from './i18n';
+import { getVscodeAutoUpdate, setVscodeAutoUpdate } from './vscodeAutoUpdateSync';
+import { isGlobalAutoUpdateEnabled } from './autoUpdateConfig';
+
+export { isGlobalAutoUpdateEnabled } from './autoUpdateConfig';
 
 export const AUTO_UPDATE_PREFIX = 'autoUpdate:';
 /** 已自动安装待重启的版本标记（避免重启前每轮重复下载安装） */
@@ -50,19 +54,6 @@ export function setInstalledUpdate(
 }
 
 /**
- * 全局自动更新开关（对齐 VS Code extensions.autoUpdate）：
- * VS Code 默认值为布尔 true，用户也可能配置为 false 或字符串 'on'/'off'，统一兼容。
- */
-export function isGlobalAutoUpdateEnabled(): boolean {
-  try {
-    const v = vscode.workspace.getConfiguration('extensions').get<unknown>('autoUpdate', true);
-    return v === true || v === 'on';
-  } catch {
-    return true;
-  }
-}
-
-/**
  * 自动更新决策（对齐 VS Code 原生机制）：
  * - 单扩展显式 off：永不自动更新；
  * - 其余情况：全局 autoUpdate 开启，或该扩展显式 on。
@@ -72,6 +63,59 @@ export function shouldAutoUpdate(globalAuto: boolean, setting: 'on' | 'off' | un
     return false;
   }
   return globalAuto || setting === 'on';
+}
+
+/**
+ * 单扩展自动更新的有效状态（与 VS Code 内置「扩展:商店」双向同步）：
+ * 优先读取 VS Code 内置扩展中心存储（state.vscdb 的 extensions.autoUpdate /
+ * extensions.donotAutoUpdate），与内置商店状态完全一致；SQLite 不可用时降级为本地
+ * globalState。读取到旧版本 globalState 数据（内置存储无记录）时惰性迁移到内置存储
+ * 并清除本地记录，之后两边共用同一数据源。
+ */
+export function getEffectiveAutoUpdate(globalState: vscode.Memento, extId: string): boolean {
+  try {
+    const id = extId.toLowerCase();
+    const st = getVscodeAutoUpdate(id);
+    if (st.available) {
+      if (st.hasRecord) {
+        return st.value;
+      }
+      // 内置存储无记录：若本地有旧版本设置，惰性迁移到内置存储并清除，保持两边一致
+      const setting = getAutoUpdateSetting(globalState, id);
+      if (setting) {
+        const ok = setVscodeAutoUpdate(id, setting === 'on');
+        if (ok) {
+          void Promise.resolve(setAutoUpdateSetting(globalState, id, undefined)).catch(
+            () => undefined
+          );
+        }
+        return setting === 'on';
+      }
+      return st.value;
+    }
+    // SQLite 不可用：降级本地 globalState
+    const setting = getAutoUpdateSetting(globalState, id);
+    return setting === 'on' || (setting !== 'off' && isGlobalAutoUpdateEnabled());
+  } catch {
+    return isGlobalAutoUpdateEnabled();
+  }
+}
+
+/** 设置单扩展自动更新：写 VS Code 内置扩展中心存储（双向同步）。
+ *  内置存储写入成功后清除本地缓存（内置存储为唯一权威，避免旧缓存被误迁移覆盖内置商店状态）；
+ *  内置存储不可用时降级写入本地缓存，保证本次会话功能可用。 */
+export async function setEffectiveAutoUpdate(
+  globalState: vscode.Memento,
+  extId: string,
+  enable: boolean
+): Promise<void> {
+  const id = extId.toLowerCase();
+  const ok = setVscodeAutoUpdate(id, enable);
+  if (ok) {
+    await setAutoUpdateSetting(globalState, id, undefined);
+  } else {
+    await setAutoUpdateSetting(globalState, id, enable ? 'on' : 'off');
+  }
 }
 
 /**
@@ -106,10 +150,6 @@ export class AutoUpdater {
     setTimeout(() => void this.checkForUpdates(), AutoUpdater.FIRST_CHECK_DELAY_MS);
   }
 
-  private globalAutoUpdateEnabled(): boolean {
-    return isGlobalAutoUpdateEnabled();
-  }
-
   private globalAutoCheckEnabled(): boolean {
     try {
       return vscode.workspace.getConfiguration('extensions').get<boolean>('autoCheckUpdates', true);
@@ -129,7 +169,6 @@ export class AutoUpdater {
         log('[autoUpdater] extensions.autoCheckUpdates=off，跳过后台更新检查');
         return;
       }
-      const globalAuto = this.globalAutoUpdateEnabled();
       const mode = getInstallMode();
       const client = createApiClient();
       const extensions = vscode.extensions.all.filter(
@@ -141,8 +180,8 @@ export class AutoUpdater {
       const toUpdate: AppInfo[] = [];
       for (const ext of extensions) {
         const id = ext.id;
-        const setting = getAutoUpdateSetting(this.globalState, id);
-        if (!shouldAutoUpdate(globalAuto, setting)) {
+        // 与 VS Code 内置扩展商店同源决策（含旧数据惰性迁移），SQLite 不可用时降级本地存储
+        if (!getEffectiveAutoUpdate(this.globalState, id)) {
           continue;
         }
         const localVersion = String(ext.packageJSON?.version ?? '');

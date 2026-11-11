@@ -4,6 +4,16 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.26] - 2026-11-11
+
+### 修复
+
+- **详情页「自动更新」与 VS Code 内置「扩展:商店」Auto Update 双向同步**：此前单扩展 Auto Update 仅存于插件中心自身 `globalState`（`autoUpdate:<extId>`），与 VS Code 内置扩展商店（`extensions.autoUpdate` / `extensions.donotAutoUpdate` 列表，存于工作台 `state.vscdb`）互不相通，导致两边状态不一致。
+  - 数据源统一为 VS Code 内置扩展商店存储：新增 `src/vscodeAutoUpdateSync.ts`，直接读写 `state.vscdb`（路径由扩展宿主进程 argv 的 `--user-data-dir` 解析，经 `node:sqlite` 打开），读写语义对齐内置 `ExtensionsWorkbenchService`（全局 `extensions.autoUpdate` 开启时维护 disabled 列表 `extensions.donotAutoUpdate`，关闭时维护 enabled 列表 `extensions.autoUpdate`，扩展 ID 统一小写）。
+  - 插件中心切换 Auto Update → 直接写入内置存储，**完全退出并重启 VS Code（仅重新加载窗口不生效）**后内置扩展商店同步生效（详情页切换后会提示）；内置扩展商店切换 → 插件中心详情页每 3 秒轮询检测并实时更新勾选状态（`webview/detail.js` 新增轻量 `autoUpdate` 消息，不整页重绘）。注：运行中的 VS Code 主进程在内存缓存 `state.vscdb`，内置商店 UI 只在主进程重启后重新读盘，这是 VS Code 存储架构的固有行为。
+  - 旧版本 `globalState` 数据在读取时惰性迁移到内置存储并清除，升级后两边自动一致；`node:sqlite` 不可用（Node < 22.5 的旧版 VS Code）或内置存储不可访问时自动降级原本地逻辑，功能不失效。
+  - 新增 `tests/unit/vscodeAutoUpdateSync.test.ts`（含真实 `state.vscdb` 副本端到端读写验证）。
+
 ## [0.1.25] - 2026-11-10
 
 ### 重构

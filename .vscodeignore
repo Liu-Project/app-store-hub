@@ -9,6 +9,7 @@ tests/**
 scripts/**
 src/**
 node_modules/**
+上架材料/**
 *.vsix
 tsconfig*.json
 tsconfig.tsbuildinfo

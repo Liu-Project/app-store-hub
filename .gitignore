@@ -11,6 +11,8 @@ out/
 # TypeScript 增量编译缓存
 tsconfig.tsbuildinfo
 
+上架材料/**
+
 # 测试临时产物
 .playwright-mcp/
 

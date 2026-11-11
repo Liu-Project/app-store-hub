@@ -71,6 +71,11 @@
       bindAdditional();
     } else if (m.type === 'toast') {
       toast(m.text, m.isError);
+    } else if (m.type === 'autoUpdate') {
+      // VS Code 内置扩展商店的 Auto Update 状态变化（扩展主机轮询到变化后推送）：
+      // 轻量更新勾选状态，不整页重绘以免重刷 README
+      if (state.app) state.app.autoUpdate = !!m.value;
+      updateAutoUpdateCheckbox(!!m.value);
     } else if (m.type === 'refresh') {
       post('getData');
     } else if (m.type === 'content') {
@@ -103,6 +108,13 @@
     if (r.issues) state.app.issues = r.issues;
     if (r.moreInfoUrl) state.app.moreInfoUrl = r.moreInfoUrl;
     if (r.moreInfoLabel) state.app.moreInfoLabel = r.moreInfoLabel;
+  }
+
+  /** 更新 Auto Update 复选框勾选状态（不重绘整页） */
+  function updateAutoUpdateCheckbox(value) {
+    document.querySelectorAll('input[data-act="toggleAutoUpdate"]').forEach(function (cb) {
+      cb.checked = !!value;
+    });
   }
 
   function esc(s) {

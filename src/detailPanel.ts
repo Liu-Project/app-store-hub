@@ -6,11 +6,7 @@ import type { ApiClient, AppInfo } from './apiClient';
 import { downloadVsixToTmp, resolveVsixUrl } from './downloadVsix';
 import { downloadFile } from './netHttp';
 import { getInstallMode } from './config';
-import {
-  getAutoUpdateSetting,
-  isGlobalAutoUpdateEnabled,
-  setAutoUpdateSetting,
-} from './autoUpdater';
+import { getEffectiveAutoUpdate, setEffectiveAutoUpdate } from './autoUpdater';
 import { compareVersions } from './version';
 import { t, uiLocale } from './i18n';
 import { safePost } from './safePost';
@@ -21,6 +17,9 @@ interface DetailMessage {
 }
 
 export class DetailPanel {
+  /** 详情页打开期间轮询 VS Code 内置扩展商店 Auto Update 状态的间隔（毫秒），实现内置商店变更实时同步 */
+  private static readonly AUTO_UPDATE_SYNC_INTERVAL_MS = 3000;
+
   private static panels = new Map<
     string,
     {
@@ -28,6 +27,7 @@ export class DetailPanel {
       client: ApiClient;
       extensionUri: vscode.Uri;
       globalState: vscode.Memento;
+      syncTimer?: NodeJS.Timeout;
     }
   >();
 
@@ -64,6 +64,10 @@ export class DetailPanel {
     const state = globalState ?? ({} as vscode.Memento);
     DetailPanel.panels.set(appId, { panel, client, extensionUri, globalState: state });
     panel.onDidDispose(() => {
+      const entry = DetailPanel.panels.get(appId);
+      if (entry?.syncTimer) {
+        clearInterval(entry.syncTimer);
+      }
       DetailPanel.panels.delete(appId);
     });
     panel.webview.html = DetailPanel.getHtml(panel.webview, extensionUri);
@@ -71,6 +75,31 @@ export class DetailPanel {
       void DetailPanel.handleMessage(panel, client, appId, msg);
     });
     await DetailPanel.pushData(panel, client, appId, initialApp, state);
+    DetailPanel.startAutoUpdateSync(appId);
+  }
+
+  /**
+   * 详情页打开期间轮询 VS Code 内置扩展商店的 Auto Update 状态：
+   * 用户在 VS Code 内置「扩展:商店」切换 Auto Update 后，此处检测到变化并实时推送前端，
+   * 实现「内置商店 → 插件中心」方向的同步（另一方向由 setEffectiveAutoUpdate 写同一存储完成）。
+   */
+  private static startAutoUpdateSync(appId: string): void {
+    const entry = DetailPanel.panels.get(appId);
+    if (!entry || entry.syncTimer) {
+      return;
+    }
+    let last = getEffectiveAutoUpdate(entry.globalState, appId);
+    entry.syncTimer = setInterval(() => {
+      const cur = DetailPanel.panels.get(appId);
+      if (!cur) {
+        return;
+      }
+      const value = getEffectiveAutoUpdate(cur.globalState, appId);
+      if (value !== last) {
+        last = value;
+        safePost(cur.panel.webview, { type: 'autoUpdate', value });
+      }
+    }, DetailPanel.AUTO_UPDATE_SYNC_INTERVAL_MS);
   }
 
   private static async handleMessage(
@@ -126,10 +155,12 @@ export class DetailPanel {
           break;
         case 'toggleAutoUpdate': {
           // 对齐 VS Code 内置 ToggleAutoUpdateForExtensionAction：on ↔ off 两态切换，
-          // enablement 存于 appStoreHub globalState（对任意软件源安装的扩展都生效，
-          // 不再依赖 VS Code 内置命令——该命令只对 VS Code 官方 gallery 的扩展有效）
-          const setting = getAutoUpdateSetting(gs, appId);
-          await setAutoUpdateSetting(gs, appId, setting === 'on' ? 'off' : 'on');
+          // 写入 VS Code 内置扩展商店存储（extensions.autoUpdate / extensions.donotAutoUpdate），
+          // 与 VS Code 内置「扩展:商店」的 Auto Update 双向同步
+          const current = getEffectiveAutoUpdate(gs, appId);
+          await setEffectiveAutoUpdate(gs, appId, !current);
+          // 运行中的 VS Code 主进程在内存缓存 state.vscdb，内置商店 UI 需完全退出重启后才刷新
+          post(t('autoUpdateSyncRestart'));
           await DetailPanel.pushData(panel, client, appId, undefined, gs);
           break;
         }
@@ -376,12 +407,10 @@ export class DetailPanel {
     const curVersion = local ? String(local.packageJSON?.version ?? '') : '';
     const toAbsolute = (u: string): string =>
       /^https?:\/\//i.test(u) ? u : `${client.baseUrl}${u}`;
-    // Auto Update 状态（对齐 VS Code 内置）：单个扩展 enablement 优先，否则回退全局 extensions.autoUpdate；
-    // 切换通过 appStoreHub globalState 记录（对任意软件源安装的扩展都生效）。
-    // 全局配置兼容布尔（VS Code 默认 true）与字符串 'on'/'off' 两种形式。
-    const autoUpdateEnabled = isGlobalAutoUpdateEnabled();
-    const setting = globalState ? getAutoUpdateSetting(globalState, appId) : undefined;
-    const autoUpdate = setting === 'on' || (setting !== 'off' && autoUpdateEnabled);
+    // Auto Update 状态（与 VS Code 内置扩展商店双向同步）：优先读取内置存储
+    // state.vscdb（extensions.autoUpdate / extensions.donotAutoUpdate），SQLite 不可用时
+    // 降级本地 globalState 并惰性迁移，保证两边状态一致。
+    const autoUpdate = globalState ? getEffectiveAutoUpdate(globalState, appId) : true;
     // 先发简单信息立即渲染（对齐 VS Code：列表点击即展示主体），manifest 异步到后再补功能/依赖 tab
     const data = {
       app: {
