@@ -799,7 +799,7 @@ export class AppStoreHubPanel implements vscode.WebviewViewProvider {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data: http: https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src http: https:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${styleUri}">
-<title>${locale === 'en' ? 'App Store Hub' : '插件中心'}</title>
+<title>${locale === 'en' ? 'App Store Hub' : '扩展广场'}</title>
 </head>
 <body>
 <div id="app"></div>

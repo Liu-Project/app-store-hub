@@ -13,7 +13,7 @@ import { log, logErr } from './logger';
  *
  * 本模块直接读写该存储（与 VS Code 内置逻辑一致，见
  * ExtensionsWorkbenchService#isAutoUpdateEnabledFor / updateAutoUpdateEnablementFor），
- * 使插件中心与 VS Code 内置扩展商店共用同一数据源，实现双向同步。
+ * 使扩展广场与 VS Code 内置扩展商店共用同一数据源，实现双向同步。
  */
 
 /** VS Code 内置扩展中心「单独启用自动更新」的扩展 ID 列表 */

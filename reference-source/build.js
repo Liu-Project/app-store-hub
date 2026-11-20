@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ZXISOS 本地软件源 - 构建脚本
+ * 本地软件源 - 构建脚本
  *
  * 扫描 repo/plugins 目录下的所有 .vsix（同一插件可含多个版本）：
  *  1. 从每个 .vsix 中提取 extension/package.json 作为扩展元数据

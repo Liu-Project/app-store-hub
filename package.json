@@ -1,8 +1,9 @@
 {
   "name": "appstore-hub",
-  "displayName": "插件中心",
-  "description": "插件中心（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面插件中心。",
-  "version": "0.1.26",
+  "displayName": "扩展广场",
+  "scope": "项目级通用",
+  "description": "扩展广场（appStoreHub）：浏览、搜索、安装、卸载和更新 VS Code 扩展应用的富界面扩展广场。",
+  "version": "0.1.27",
   "publisher": "Liu-Hongcun",
   "author": {
     "name": "Liu-Hongcun"
@@ -57,14 +58,14 @@
     "commands": [
       {
         "command": "appStoreHub.open",
-        "title": "打开插件中心",
-        "category": "插件中心",
+        "title": "打开扩展广场",
+        "category": "扩展广场",
         "icon": "$(store)"
       },
       {
         "command": "appStoreHub.toggleDebug",
-        "title": "切换插件中心调试日志",
-        "category": "插件中心",
+        "title": "切换扩展广场调试日志",
+        "category": "扩展广场",
         "icon": "$(debug)"
       }
     ],
@@ -72,7 +73,7 @@
       "activitybar": [
         {
           "id": "appStoreHub",
-          "title": "插件中心",
+          "title": "扩展广场",
           "icon": "media/store.png"
         }
       ]
@@ -82,7 +83,7 @@
         {
           "type": "webview",
           "id": "appStoreHub.main",
-          "name": "插件中心"
+          "name": "扩展广场"
         }
       ]
     },
@@ -96,7 +97,7 @@
       ]
     },
     "configuration": {
-      "title": "插件中心",
+      "title": "扩展广场",
       "properties": {
         "appStoreHub.language": {
           "type": "string",
@@ -111,7 +112,7 @@
             "始终显示英文"
           ],
           "default": "auto",
-          "description": "插件中心界面语言：auto 跟随 VS Code 界面语言；也可显式指定 zh-cn（中文）或 en（英文）。"
+          "description": "扩展广场界面语言：auto 跟随 VS Code 界面语言；也可显式指定 zh-cn（中文）或 en（英文）。"
         },
         "appStoreHub.sources": {
           "type": "array",
@@ -187,7 +188,7 @@
         "appStoreHub.debug": {
           "type": "boolean",
           "default": true,
-          "description": "是否输出调试日志到「插件中心」输出面板（含请求 URL、代理、耗时、重试与错误详情）。可用命令面板「切换插件中心调试日志」快速开关。"
+          "description": "是否输出调试日志到「扩展广场」输出面板（含请求 URL、代理、耗时、重试与错误详情）。可用命令面板「切换扩展广场调试日志」快速开关。"
         }
       }
     }

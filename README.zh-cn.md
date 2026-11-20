@@ -1,6 +1,6 @@
 <div align="center">
 
-# 插件中心（appStoreHub）
+# 扩展广场（appStoreHub）
 
 **在 VS Code 内直接浏览、搜索、安装、更新与卸载扩展**，支持多软件源自由切换，开箱对接 VS Code 官方 Marketplace 与 Open VSX。
 
@@ -22,7 +22,7 @@
 
 ## 界面预览
 
-![插件中心列表页](https://cdn.jsdelivr.net/gh/Liu-Project/app-store-hub@master/media/screenshot.png)
+![扩展广场列表页](https://cdn.jsdelivr.net/gh/Liu-Project/app-store-hub@master/media/screenshot.png)
 
 ## 功能特性
 
@@ -38,7 +38,7 @@
 
 ## 使用
 
-- **打开**：点击活动栏「插件中心」图标，或命令面板执行 *插件中心: 打开插件中心*
+- **打开**：点击活动栏「扩展广场」图标，或命令面板执行 *扩展广场: 打开扩展广场*
 - **切换软件源**：顶部下拉框选择；点「软件源」可添加 / 删除 / 设为当前，配置持久化到 VS Code 设置
 - **安装模式**：`auto`（默认，真实调用 VS Code 安装扩展）/ `manual`（仅记录状态）
 
@@ -50,7 +50,7 @@
 | Open VSX | `https://open-vsx.org/vscode/gallery` |
 | 本地开发源 | `http://127.0.0.1:3000` |
 
-**本地开发源** —— 仓库内置 `reference-source/` 参考实现（ZXISOS VS Code Gallery 兼容协议）：在该目录执行 `npm start`（或 `node server.js`）即可在 `http://127.0.0.1:3000` 提供三个预置扩展的软件源服务，支持 `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` 环境变量。
+**本地开发源** —— 仓库内置 `reference-source/` 参考实现（VS Code Gallery 兼容协议）：在该目录执行 `npm start`（或 `node server.js`）即可在 `http://127.0.0.1:3000` 提供三个预置扩展的软件源服务，支持 `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` 环境变量。
 
 ## 配置
 

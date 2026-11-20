@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ZXISOS 本地软件源 - VS Code Gallery 兼容 HTTP 服务
+ * 本地软件源 - VS Code Gallery 兼容 HTTP 服务
  *
  * 协议与官方软件源一致：
  *   POST /vscode/gallery/extensionquery   扩展查询（VS Code Gallery 协议）
@@ -20,7 +20,7 @@
  * 返回给客户端的资源地址按「请求 Host」动态生成：局域网客户端访问时，
  * 图标 / README / VSIX 下载等 URL 自动指向服务器局域网地址，本机访问时
  * 自动回退 127.0.0.1，三个预置扩展（file-match-compare / markdown-commonmark-preview
- * / zxisos-requirement-helper）在本机与局域网下均可正常浏览与下载。
+ * / appstore-hub）在本机与局域网下均可正常浏览与下载。
  *
  * 高并发优化（30 人同时访问，详见 性能优化.md）：
  *   1. /api/nac/admin/list 结果按 metadata mtime 缓存，消除每请求同步磁盘 I/O；
@@ -544,7 +544,7 @@ function handleItemPage(id, meta, res, req) {
     downloadLink = `<li>下载: <a href="${vsix}">${fileName}</a></li>`;
   }
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${ext.displayName} - ZXISOS 本地软件源</title>
+<html><head><meta charset="utf-8"><title>${ext.displayName} - 本地软件源</title>
 <style>body{font-family:sans-serif;max-width:720px;margin:40px auto;color:#333}img{max-width:128px}pre{background:#f5f5f5;padding:12px;border-radius:6px}</style></head>
 <body>
 <h1><img src="${icon || ''}" alt="icon" style="vertical-align:middle"> ${ext.displayName}</h1>
@@ -671,7 +671,7 @@ const server = http.createServer((req, res) => {
       res,
       200,
       {
-        name: 'ZXISOS Local Software Repository',
+        name: 'Local Software Repository',
         protocol: 'VS Code Gallery compatible',
         endpoint: `${BASE_URL}/vscode/gallery/extensionquery`,
         extensions: m.extensions.length,
@@ -684,7 +684,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`ZXISOS 本地软件源已启动: ${BASE_URL}`);
+  console.log(`本地软件源已启动: ${BASE_URL}`);
   console.log(`  Gallery 查询接口: ${BASE_URL}/vscode/gallery/extensionquery`);
   console.log(`  收录扩展数: ${meta.extensions.length}`);
   for (const e of meta.extensions) {

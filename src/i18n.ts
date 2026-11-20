@@ -54,8 +54,8 @@ const zh: Dict = {
   marketplaceMicrosoft: 'Microsoft 市场',
   marketplaceOpenVsx: 'Open VSX 市场',
   marketplaceOther: '应用商店',
-  debugLogOn: '插件中心调试日志已开启',
-  debugLogOff: '插件中心调试日志已关闭',
+  debugLogOn: '扩展广场调试日志已开启',
+  debugLogOff: '扩展广场调试日志已关闭',
   autoUpdatedCount: '已自动更新 {0} 个扩展，请重新加载窗口生效',
   autoUpdateSyncRestart:
     '已同步到内置扩展商店，完全退出并重启 VS Code 后生效（仅重新加载窗口不生效）',

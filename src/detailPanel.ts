@@ -81,7 +81,7 @@ export class DetailPanel {
   /**
    * 详情页打开期间轮询 VS Code 内置扩展商店的 Auto Update 状态：
    * 用户在 VS Code 内置「扩展:商店」切换 Auto Update 后，此处检测到变化并实时推送前端，
-   * 实现「内置商店 → 插件中心」方向的同步（另一方向由 setEffectiveAutoUpdate 写同一存储完成）。
+   * 实现「内置商店 → 扩展广场」方向的同步（另一方向由 setEffectiveAutoUpdate 写同一存储完成）。
    */
   private static startAutoUpdateSync(appId: string): void {
     const entry = DetailPanel.panels.get(appId);

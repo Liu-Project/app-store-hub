@@ -4,6 +4,13 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.1.27] - 2026-11-20
+
+### 变更
+
+- **品牌名称统一为「扩展广场」**：插件显示名、活动栏 / 视图 / 命令 / 配置项标题、输出通道、Webview 页面标题、界面文案与中英文文档统一由「插件中心」更新为「扩展广场」；扩展内部标识 `appStoreHub.*` 保持不变，已有配置与用户数据不受影响。
+- **reference-source 本地软件源同步更新**：软件源展示名、构建与服务脚本注释、页面标题统一更新为「扩展广场 / 本地软件源」，元数据展示名与简介与新版包信息保持一致。
+
 ## [0.1.26] - 2026-11-11
 
 ### 修复
@@ -25,7 +32,7 @@
 
 ### 新增
 
-- **reference-source 本地软件源**（ZXISOS VS Code Gallery 兼容协议）：新增 `reference-source/` 目录，含 `build.js` 构建脚本、`server.js` HTTP 服务、`metadata.json` 元数据与三个预置扩展素材（appstore-hub / file-match-compare / markdown-commonmark-preview）；支持 `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` 环境变量，资源地址按请求 Host 动态生成，本机与局域网均可浏览与下载扩展。
+- **reference-source 本地软件源**（VS Code Gallery 兼容协议）：新增 `reference-source/` 目录，含 `build.js` 构建脚本、`server.js` HTTP 服务、`metadata.json` 元数据与三个预置扩展素材（appstore-hub / file-match-compare / markdown-commonmark-preview）；支持 `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` 环境变量，资源地址按请求 Host 动态生成，本机与局域网均可浏览与下载扩展。
 - **`.vscodeignore` 精简打包产物**：打包 vsix 时排除 `src` / `tests` / `reference-source` / `scripts` 等目录与开发配置文件，仅保留运行时文件；同时 `*.vsix` 产物不再纳入版本库。
 
 ### 修复

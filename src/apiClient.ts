@@ -737,7 +737,7 @@ export class ApiClient {
   }
 }
 
-/** 将 Gallery 扩展对象映射为插件中心内部 AppInfo */
+/** 将 Gallery 扩展对象映射为扩展广场内部 AppInfo */
 export function galleryToAppInfo(
   e: GalleryExtension,
   opts: { targetPlatform?: string; includePreRelease?: boolean } = {}

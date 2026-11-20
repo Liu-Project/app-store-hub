@@ -2,7 +2,7 @@
   'use strict';
 
   var zh = {
-    'app.title': '插件中心',
+    'app.title': '扩展广场',
     'requestTimeout': '请求超时：{0} 未收到插件端响应',
     'requestFailed': '请求失败',
     'search.placeholder': '搜索扩展，支持 @installed / @category: / @sort: / @tag:...',

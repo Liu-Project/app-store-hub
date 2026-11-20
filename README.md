@@ -50,7 +50,7 @@
 | Open VSX | `https://open-vsx.org/vscode/gallery` |
 | Local dev source | `http://127.0.0.1:3000` |
 
-**Local dev source** — a reference implementation (ZXISOS VS Code Gallery compatible protocol) is bundled under [`reference-source/`](./reference-source/): run `npm start` there (or `node server.js`) to serve three preset extensions on `http://127.0.0.1:3000`. `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` env vars are supported.
+**Local dev source** — a reference implementation (VS Code Gallery compatible protocol) is bundled under [`reference-source/`](./reference-source/): run `npm start` there (or `node server.js`) to serve three preset extensions on `http://127.0.0.1:3000`. `REPO_PORT` / `REPO_HOST` / `REPO_BASE_URL` env vars are supported.
 
 ## Configuration
 
